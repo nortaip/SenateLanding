@@ -8,7 +8,7 @@ import { Features } from "@/components/Features";
 import { Workflow } from "@/components/Workflow";
 import { Stats } from "@/components/Stats";
 import { Testimonials } from "@/components/Testimonials";
-import { Pricing } from "@/components/Pricing";
+import { About } from "@/components/About";
 import { FinalCTA } from "@/components/FinalCTA";
 import { Footer } from "@/components/Footer";
 
@@ -26,7 +26,7 @@ export default function Home() {
         <Workflow />
         <Stats />
         <Testimonials />
-        <Pricing />
+        <About />
         <FinalCTA />
       </main>
       <Footer />

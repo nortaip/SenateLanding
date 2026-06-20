@@ -15,7 +15,7 @@ export function Navbar() {
     { label: t.nav.ecosystem, href: "#ecosystem" },
     { label: t.nav.screenshots, href: "#screenshots" },
     { label: t.nav.features, href: "#features" },
-    { label: t.nav.pricing, href: "#pricing" },
+    { label: t.nav.about, href: "#about" },
   ];
 
   useEffect(() => {

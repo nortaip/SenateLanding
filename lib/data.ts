@@ -8,6 +8,10 @@ import {
   Users,
   BarChart3,
   QrCode,
+  Tablet,
+  BellRing,
+  BookOpen,
+  Activity,
   RefreshCw,
   WifiOff,
   Network,
@@ -32,6 +36,10 @@ export const ecosystemMeta: { id: string; icon: LucideIcon }[] = [
   { id: "staff", icon: Users },
   { id: "reporting", icon: BarChart3 },
   { id: "qr-ordering", icon: QrCode },
+  { id: "kiosk-reservation", icon: Tablet },
+  { id: "waiter-calling", icon: BellRing },
+  { id: "qr-menu", icon: BookOpen },
+  { id: "staff-monitoring", icon: Activity },
 ];
 
 export const featureIcons: LucideIcon[] = [

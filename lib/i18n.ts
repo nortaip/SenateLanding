@@ -12,6 +12,7 @@ const en = {
     screenshots: "Screenshots",
     features: "Features",
     pricing: "Pricing",
+    about: "Company",
     signIn: "Sign in",
     requestDemo: "Request Demo",
   },
@@ -94,6 +95,34 @@ const en = {
         description:
           "Let guests scan, browse, order, and pay from their phone — orders flow straight to the kitchen.",
         points: ["Contactless menu", "Scan-to-pay", "Direct to KDS"],
+      },
+      {
+        name: "Kiosk & Reservation",
+        tag: "Self-Service",
+        description:
+          "Self-service kiosk ordering plus table reservations and waitlists — guests order or book without waiting on staff.",
+        points: ["Self-order kiosk", "Table reservations", "Walk-up & pre-order"],
+      },
+      {
+        name: "Waiter Calling",
+        tag: "Service",
+        description:
+          "Guests call a waiter, request the bill, or ask for help from the table — staff get instant alerts on their device.",
+        points: ["One-tap call waiter", "Request bill or help", "Instant staff alerts"],
+      },
+      {
+        name: "QR Menu",
+        tag: "Guest",
+        description:
+          "A beautiful digital menu guests open by scanning — photos, descriptions, allergens, and prices, updated in real time.",
+        points: ["Contactless digital menu", "Photos & allergen info", "Updates instantly"],
+      },
+      {
+        name: "Staff Monitoring",
+        tag: "Oversight",
+        description:
+          "See who did what, and when. Track logins, voids, discounts, and performance across every shift and branch.",
+        points: ["Action & audit logs", "Void & discount tracking", "Per-staff performance"],
       },
     ],
   },
@@ -321,6 +350,31 @@ const en = {
     watchVideo: "Watch Video",
     note: "14-day free trial · No credit card · Cancel anytime",
   },
+  about: {
+    eyebrow: "About Senate Group",
+    titleTop: "The team behind ",
+    titleAccent: "Senate POS.",
+    description:
+      "Senate POS is the flagship restaurant platform from Senate Group — a hospitality technology company on a mission to give every restaurant, cafe, and chain the tools enterprise giants take for granted. We build one connected ecosystem, backed by hands-on local support, so operators can focus on what they do best: hospitality.",
+    pillars: [
+      {
+        title: "Hospitality-first",
+        description: "Built with and for restaurant operators — every feature earns its place on a real floor.",
+      },
+      {
+        title: "One connected ecosystem",
+        description: "POS, kitchen, inventory, staff, and guest tools that genuinely talk to each other.",
+      },
+      {
+        title: "Local, hands-on support",
+        description: "Onboarding, training, and support from people who answer when you need them.",
+      },
+      {
+        title: "Always improving",
+        description: "Continuous updates shaped by feedback from thousands of daily users.",
+      },
+    ],
+  },
   footer: {
     brandDesc:
       "The complete restaurant operating system. One platform to run sales, kitchen, inventory, staff, and reporting.",
@@ -355,6 +409,7 @@ const az: Dict = {
     screenshots: "Ekran Görüntüləri",
     features: "İmkanlar",
     pricing: "Qiymətlər",
+    about: "Şirkət",
     signIn: "Daxil ol",
     requestDemo: "Demo Tələb Et",
   },
@@ -437,6 +492,34 @@ const az: Dict = {
         description:
           "Qonaqlar telefonlarından skan edib, baxıb, sifariş verib ödəsinlər — sifarişlər birbaşa mətbəxə axır.",
         points: ["Təmassız menyu", "Skan-və-ödə", "Birbaşa KDS-ə"],
+      },
+      {
+        name: "Kiosk və Rezervasiya",
+        tag: "Self-Servis",
+        description:
+          "Self-servis kiosk sifarişi, masa rezervasiyası və növbə — qonaqlar işçini gözləmədən sifariş verir və ya yer ayırdır.",
+        points: ["Self-sifariş kioskı", "Masa rezervasiyası", "Gəliş və ön-sifariş"],
+      },
+      {
+        name: "Ofisiant Çağırma",
+        tag: "Xidmət",
+        description:
+          "Qonaqlar masadan ofisiant çağırır, hesab istəyir və ya kömək tələb edir — işçilər cihazlarında ani bildiriş alır.",
+        points: ["Bir toxunuşla ofisiant", "Hesab və ya kömək istəyi", "Ani işçi bildirişi"],
+      },
+      {
+        name: "QR Menyu",
+        tag: "Qonaq",
+        description:
+          "Qonaqların skan edib açdığı gözəl rəqəmsal menyu — şəkillər, təsvirlər, allergenlər və qiymətlər real vaxtda yenilənir.",
+        points: ["Təmassız rəqəmsal menyu", "Şəkil və allergen məlumatı", "Ani yenilənmə"],
+      },
+      {
+        name: "İşçi Nəzarəti",
+        tag: "Nəzarət",
+        description:
+          "Kimin nə vaxt nə etdiyini görün. Girişləri, ləğvləri, endirimləri və performansı hər növbə və filial üzrə izləyin.",
+        points: ["Əməliyyat və audit jurnalı", "Ləğv və endirim izləməsi", "İşçi üzrə performans"],
       },
     ],
   },
@@ -664,6 +747,31 @@ const az: Dict = {
     watchVideo: "Videoya Bax",
     note: "14 günlük pulsuz sınaq · Kart yoxdur · İstənilən vaxt ləğv edin",
   },
+  about: {
+    eyebrow: "Senate Group Haqqında",
+    titleTop: "Senate POS-un ",
+    titleAccent: "arxasındakı komanda.",
+    description:
+      "Senate POS — Senate Group-un flaqman restoran platformasıdır. Senate Group qonaqpərvərlik texnologiyaları şirkətidir; məqsədimiz hər restorana, kafeyə və şəbəkəyə nəhəng korporasiyaların adi saydığı alətləri verməkdir. Biz vahid, birləşmiş ekosistem qururuq və canlı yerli dəstəklə operatorların ən yaxşı bacardıqları işə — qonaqpərvərliyə fokuslanmasına imkan veririk.",
+    pillars: [
+      {
+        title: "Əvvəlcə qonaqpərvərlik",
+        description: "Restoran operatorları ilə və onlar üçün qurulub — hər funksiya real zalda yerini qazanır.",
+      },
+      {
+        title: "Vahid birləşmiş ekosistem",
+        description: "Bir-biri ilə həqiqətən danışan POS, mətbəx, anbar, işçi və qonaq alətləri.",
+      },
+      {
+        title: "Yerli, canlı dəstək",
+        description: "Ehtiyacınız olanda cavab verən insanlardan adaptasiya, təlim və dəstək.",
+      },
+      {
+        title: "Daim təkmilləşir",
+        description: "Minlərlə gündəlik istifadəçinin rəyi ilə formalaşan davamlı yeniləmələr.",
+      },
+    ],
+  },
   footer: {
     brandDesc:
       "Tam restoran əməliyyat sistemi. Satış, mətbəx, anbar, işçi və hesabatları idarə etmək üçün vahid platforma.",
@@ -696,6 +804,7 @@ const ru: Dict = {
     screenshots: "Скриншоты",
     features: "Возможности",
     pricing: "Цены",
+    about: "Компания",
     signIn: "Войти",
     requestDemo: "Запросить демо",
   },
@@ -778,6 +887,34 @@ const ru: Dict = {
         description:
           "Гости сканируют, просматривают, заказывают и оплачивают со своего телефона — заказы сразу попадают на кухню.",
         points: ["Бесконтактное меню", "Сканируй и плати", "Напрямую в KDS"],
+      },
+      {
+        name: "Киоск и бронирование",
+        tag: "Самообслуживание",
+        description:
+          "Самозаказ через киоск, бронирование столов и лист ожидания — гости заказывают или бронируют без ожидания персонала.",
+        points: ["Киоск самозаказа", "Бронирование столов", "Приём и предзаказ"],
+      },
+      {
+        name: "Вызов официанта",
+        tag: "Сервис",
+        description:
+          "Гости вызывают официанта, просят счёт или помощь прямо со стола — персонал получает мгновенные уведомления на устройство.",
+        points: ["Вызов официанта в одно касание", "Запрос счёта или помощи", "Мгновенные уведомления"],
+      },
+      {
+        name: "QR-меню",
+        tag: "Гость",
+        description:
+          "Красивое цифровое меню, которое гости открывают сканированием — фото, описания, аллергены и цены обновляются в реальном времени.",
+        points: ["Бесконтактное цифровое меню", "Фото и данные об аллергенах", "Мгновенные обновления"],
+      },
+      {
+        name: "Контроль персонала",
+        tag: "Надзор",
+        description:
+          "Видно, кто и что сделал и когда. Отслеживайте входы, отмены, скидки и эффективность по каждой смене и филиалу.",
+        points: ["Журналы действий и аудита", "Учёт отмен и скидок", "Эффективность по сотрудникам"],
       },
     ],
   },
@@ -1004,6 +1141,31 @@ const ru: Dict = {
     requestDemo: "Запросить демо",
     watchVideo: "Смотреть видео",
     note: "14 дней бесплатно · Без карты · Отмена в любое время",
+  },
+  about: {
+    eyebrow: "О Senate Group",
+    titleTop: "Команда, стоящая за ",
+    titleAccent: "Senate POS.",
+    description:
+      "Senate POS — флагманская ресторанная платформа Senate Group, технологической компании в сфере гостеприимства. Наша миссия — дать каждому ресторану, кафе и сети инструменты, которые гиганты считают само собой разумеющимися. Мы создаём единую связанную экосистему и обеспечиваем живую локальную поддержку, чтобы операторы могли сосредоточиться на главном — гостеприимстве.",
+    pillars: [
+      {
+        title: "Прежде всего гостеприимство",
+        description: "Создано вместе с рестораторами и для них — каждая функция оправдывает себя в реальном зале.",
+      },
+      {
+        title: "Единая связанная экосистема",
+        description: "POS, кухня, склад, персонал и гостевые инструменты, которые действительно общаются между собой.",
+      },
+      {
+        title: "Локальная живая поддержка",
+        description: "Онбординг, обучение и поддержка от людей, которые отвечают, когда нужно.",
+      },
+      {
+        title: "Постоянное развитие",
+        description: "Непрерывные обновления на основе отзывов тысяч ежедневных пользователей.",
+      },
+    ],
   },
   footer: {
     brandDesc:
