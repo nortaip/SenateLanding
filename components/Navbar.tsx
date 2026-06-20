@@ -3,17 +3,20 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Crown } from "lucide-react";
-
-const links = [
-  { label: "Ecosystem", href: "#ecosystem" },
-  { label: "Screenshots", href: "#screenshots" },
-  { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
-];
+import { useI18n } from "./i18n/LanguageProvider";
+import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
 
 export function Navbar() {
+  const { t } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const links = [
+    { label: t.nav.ecosystem, href: "#ecosystem" },
+    { label: t.nav.screenshots, href: "#screenshots" },
+    { label: t.nav.features, href: "#features" },
+    { label: t.nav.pricing, href: "#pricing" },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -61,27 +64,31 @@ export function Navbar() {
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
+            <LanguageSwitcher />
             <a
               href="#"
               className="text-sm font-medium text-mist-300 transition-colors hover:text-mist-100"
             >
-              Sign in
+              {t.nav.signIn}
             </a>
             <a
               href="#demo"
               className="rounded-xl bg-gradient-to-br from-gold-300 to-gold-600 px-4 py-2 text-sm font-semibold text-ink-900 shadow-lg transition-transform hover:scale-[1.03]"
             >
-              Request Demo
+              {t.nav.requestDemo}
             </a>
           </div>
 
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-xl text-mist-100 md:hidden"
-            aria-label="Toggle menu"
-          >
-            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="grid h-10 w-10 place-items-center rounded-xl text-mist-100"
+              aria-label="Toggle menu"
+            >
+              {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -109,7 +116,7 @@ export function Navbar() {
                 onClick={() => setOpen(false)}
                 className="mt-1 block rounded-xl bg-gradient-to-br from-gold-300 to-gold-600 px-4 py-3 text-center text-sm font-semibold text-ink-900"
               >
-                Request Demo
+                {t.nav.requestDemo}
               </a>
             </div>
           </motion.div>

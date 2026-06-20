@@ -1,30 +1,7 @@
-import { Crown, Twitter, Linkedin, Instagram, Facebook, Youtube } from "lucide-react";
+"use client";
 
-const columns = [
-  {
-    title: "Products",
-    links: [
-      "Back Office",
-      "Windows POS",
-      "Mobile POS",
-      "Kitchen Display",
-      "Inventory",
-      "QR Ordering",
-    ],
-  },
-  {
-    title: "Documentation",
-    links: ["Getting Started", "Guides", "API Reference", "Integrations", "Changelog", "Status"],
-  },
-  {
-    title: "Support",
-    links: ["Help Center", "Community", "Training", "Onboarding", "System Status", "Security"],
-  },
-  {
-    title: "Contact",
-    links: ["Request Demo", "Talk to Sales", "Partnerships", "Careers", "Press Kit", "About Us"],
-  },
-];
+import { Crown, Twitter, Linkedin, Instagram, Facebook, Youtube } from "lucide-react";
+import { useI18n } from "./i18n/LanguageProvider";
 
 const socials = [
   { Icon: Twitter, label: "Twitter" },
@@ -35,6 +12,7 @@ const socials = [
 ];
 
 export function Footer() {
+  const { t } = useI18n();
   return (
     <footer className="relative border-t border-white/5 bg-ink-950/60">
       <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
@@ -50,8 +28,7 @@ export function Footer() {
               </span>
             </a>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-mist-400">
-              The complete restaurant operating system. One platform to run sales,
-              kitchen, inventory, staff, and reporting.
+              {t.footer.brandDesc}
             </p>
             <div className="mt-6 flex gap-2.5">
               {socials.map(({ Icon, label }) => (
@@ -68,7 +45,7 @@ export function Footer() {
           </div>
 
           {/* Link columns */}
-          {columns.map((col) => (
+          {t.footer.columns.map((col) => (
             <div key={col.title}>
               <h3 className="font-display text-sm font-semibold text-mist-100">{col.title}</h3>
               <ul className="mt-4 space-y-2.5">
@@ -89,10 +66,10 @@ export function Footer() {
 
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 sm:flex-row">
           <p className="text-xs text-mist-500">
-            © {new Date().getFullYear()} Senate POS. All rights reserved.
+            {t.footer.copyright.replace("{year}", String(new Date().getFullYear()))}
           </p>
           <div className="flex gap-6">
-            {["Privacy Policy", "Terms of Service", "Cookies"].map((l) => (
+            {t.footer.legal.map((l) => (
               <a key={l} href="#" className="text-xs text-mist-500 transition-colors hover:text-mist-300">
                 {l}
               </a>

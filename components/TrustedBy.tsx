@@ -1,15 +1,19 @@
-import { trustedLogos, trustStats } from "@/lib/data";
+"use client";
+
+import { trustedLogos, trustStatValues } from "@/lib/data";
 import { Reveal } from "./ui/Reveal";
 import { UtensilsCrossed } from "lucide-react";
+import { useI18n } from "./i18n/LanguageProvider";
 
 export function TrustedBy() {
+  const { t } = useI18n();
   const logos = [...trustedLogos, ...trustedLogos];
   return (
     <section className="relative py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Reveal>
           <p className="text-center text-xs font-medium uppercase tracking-[0.22em] text-mist-500">
-            Trusted by ambitious restaurants & chains worldwide
+            {t.trusted.title}
           </p>
         </Reveal>
 
@@ -32,12 +36,14 @@ export function TrustedBy() {
 
         {/* Stats strip */}
         <div className="mt-14 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/5 bg-white/5 md:grid-cols-4">
-          {trustStats.map((s, i) => (
-            <Reveal key={s.label} delay={i} className="bg-ink-900/70 p-6 text-center sm:p-8">
+          {trustStatValues.map((value, i) => (
+            <Reveal key={i} delay={i} className="bg-ink-900/70 p-6 text-center sm:p-8">
               <div className="font-display text-2xl font-bold text-gradient-gold sm:text-4xl">
-                {s.value}
+                {value}
               </div>
-              <div className="mt-1.5 text-xs text-mist-400 sm:text-sm">{s.label}</div>
+              <div className="mt-1.5 text-xs text-mist-400 sm:text-sm">
+                {t.trusted.statLabels[i]}
+              </div>
             </Reveal>
           ))}
         </div>

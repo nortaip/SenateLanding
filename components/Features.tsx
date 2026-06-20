@@ -1,25 +1,29 @@
-import { features } from "@/lib/data";
+"use client";
+
+import { featureIcons } from "@/lib/data";
 import { SectionHeading } from "./ui/SectionHeading";
 import { Reveal } from "./ui/Reveal";
+import { useI18n } from "./i18n/LanguageProvider";
 
 export function Features() {
+  const { t } = useI18n();
   return (
     <section id="features" className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
-          eyebrow="Platform Features"
+          eyebrow={t.features.eyebrow}
           title={
             <>
-              Enterprise muscle,{" "}
-              <span className="text-gradient-gold">without the enterprise drag.</span>
+              {t.features.titleTop}
+              <span className="text-gradient-gold">{t.features.titleAccent}</span>
             </>
           }
-          subtitle="The capabilities serious operators demand — engineered to be invisible until the moment you need them."
+          subtitle={t.features.subtitle}
         />
 
         <div className="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((f, i) => {
-            const Icon = f.icon;
+          {featureIcons.map((Icon, i) => {
+            const f = t.features.items[i];
             return (
               <Reveal as="article" key={f.title} delay={i % 4}>
                 <div className="group relative h-full overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 transition-all duration-300 hover:border-gold-500/30 hover:bg-white/[0.04]">

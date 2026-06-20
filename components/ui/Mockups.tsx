@@ -271,3 +271,74 @@ export function KitchenMockup({ accent = "#fca5a5" }: { accent?: string }) {
     </div>
   );
 }
+
+/* ---------- Kiosk / Self-service ordering ---------- */
+
+export function KioskMockup({ accent = "#d4af37" }: { accent?: string }) {
+  return (
+    <div className="flex flex-col gap-3 bg-ink-900/80 p-4 text-left sm:flex-row">
+      {/* Menu grid */}
+      <div className="flex-1">
+        <div className="mb-3 flex items-center justify-between">
+          <Line w="90px" />
+          <div className="flex gap-1.5">
+            {["All", "Mains", "Sides"].map((c, i) => (
+              <span
+                key={c}
+                className="rounded-full px-2 py-0.5 text-[9px] font-semibold"
+                style={{
+                  background: i === 0 ? accent : "rgba(255,255,255,0.05)",
+                  color: i === 0 ? "#081120" : "#8392ad",
+                }}
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2.5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-white/5 bg-white/[0.03] p-2">
+              <div
+                className="mb-2 h-12 w-full rounded-lg"
+                style={{ background: `linear-gradient(135deg, ${accent}22, ${accent}08)` }}
+              />
+              <Line w="80%" />
+              <div className="mt-1.5 text-[10px] font-bold" style={{ color: accent }}>
+                ${9 + i}.50
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Order cart */}
+      <div className="w-full shrink-0 rounded-xl border border-white/5 bg-black/20 p-3 sm:w-40">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-mist-400">
+          Your Order
+        </div>
+        <div className="mt-3 space-y-2.5">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center justify-between gap-2">
+              <Line w={`${50 + i * 8}%`} />
+              <span className="text-[9px] font-semibold" style={{ color: accent }}>
+                ×{i}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="my-3 h-px w-full bg-white/5" />
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-mist-400">Total</span>
+          <span className="font-display text-sm font-bold text-mist-100">$42.50</span>
+        </div>
+        <div
+          className="mt-3 rounded-lg py-2 text-center text-[11px] font-semibold text-ink-900"
+          style={{ background: accent }}
+        >
+          Pay &amp; Order
+        </div>
+      </div>
+    </div>
+  );
+}
+

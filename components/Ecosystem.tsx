@@ -3,35 +3,38 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
-import { ecosystem } from "@/lib/data";
+import { ecosystemMeta } from "@/lib/data";
 import { SectionHeading } from "./ui/SectionHeading";
 import { Reveal } from "./ui/Reveal";
+import { useI18n } from "./i18n/LanguageProvider";
 
 export function Ecosystem() {
+  const { t } = useI18n();
   const [active, setActive] = useState<string | null>(null);
 
   return (
     <section id="ecosystem" className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
-          eyebrow="Product Ecosystem"
+          eyebrow={t.ecosystem.eyebrow}
           title={
             <>
-              One platform.{" "}
-              <span className="text-gradient-gold">Every part of service.</span>
+              {t.ecosystem.titleTop}
+              <span className="text-gradient-gold">{t.ecosystem.titleAccent}</span>
             </>
           }
-          subtitle="Senate POS isn't a single app — it's a connected ecosystem that runs the front of house, the kitchen, the back office, and everything in between."
+          subtitle={t.ecosystem.subtitle}
         />
 
         <div className="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {ecosystem.map((item, i) => {
-            const Icon = item.icon;
-            const isActive = active === item.id;
+          {ecosystemMeta.map((meta, i) => {
+            const item = t.ecosystem.items[i];
+            const Icon = meta.icon;
+            const isActive = active === meta.id;
             return (
-              <Reveal as="article" key={item.id} delay={i % 4}>
+              <Reveal as="article" key={meta.id} delay={i % 4}>
                 <motion.div
-                  onHoverStart={() => setActive(item.id)}
+                  onHoverStart={() => setActive(meta.id)}
                   onHoverEnd={() => setActive(null)}
                   whileHover={{ y: -6 }}
                   transition={{ type: "spring", stiffness: 280, damping: 22 }}

@@ -8,10 +8,12 @@ import {
   PhoneMockup,
   KitchenMockup,
 } from "./ui/Mockups";
+import { useI18n } from "./i18n/LanguageProvider";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export function Hero() {
+  const { t } = useI18n();
   return (
     <section id="top" className="relative overflow-hidden pt-32 sm:pt-40">
       {/* Backdrop */}
@@ -44,7 +46,7 @@ export function Hero() {
             className="glass-gold group inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium text-gold-300"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            The restaurant operating system, reimagined
+            {t.hero.badge}
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </motion.a>
 
@@ -54,9 +56,9 @@ export function Hero() {
             transition={{ duration: 0.75, delay: 0.06, ease }}
             className="mt-6 font-display text-4xl font-bold leading-[1.05] tracking-tight text-mist-100 sm:text-6xl md:text-7xl"
           >
-            The Complete
+            {t.hero.headlineTop}
             <br />
-            <span className="text-gradient-gold">Restaurant Operating System</span>
+            <span className="text-gradient-gold">{t.hero.headlineAccent}</span>
           </motion.h1>
 
           <motion.p
@@ -65,9 +67,7 @@ export function Hero() {
             transition={{ duration: 0.75, delay: 0.14, ease }}
             className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-mist-300 sm:text-lg"
           >
-            Manage sales, tables, kitchen operations, inventory, staff, and
-            reporting from a single platform — built for restaurants, cafes, food
-            courts, lounges, and chains.
+            {t.hero.subtitle}
           </motion.p>
 
           <motion.div
@@ -80,7 +80,7 @@ export function Hero() {
               href="#demo"
               className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-gold-300 to-gold-600 px-7 py-3.5 text-sm font-semibold text-ink-900 shadow-xl transition-transform hover:scale-[1.03] sm:w-auto"
             >
-              Request Demo
+              {t.hero.requestDemo}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
             <a
@@ -88,7 +88,7 @@ export function Hero() {
               className="glass group inline-flex w-full items-center justify-center gap-2 rounded-2xl px-7 py-3.5 text-sm font-semibold text-mist-100 transition-colors hover:bg-white/5 sm:w-auto"
             >
               <PlayCircle className="h-5 w-5 text-gold-400" />
-              Watch Video
+              {t.hero.watchVideo}
             </a>
           </motion.div>
 
@@ -98,7 +98,7 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="mt-5 text-xs text-mist-500"
           >
-            No credit card required · 14-day trial · Setup in under an hour
+            {t.hero.note}
           </motion.p>
         </div>
 
@@ -126,7 +126,7 @@ export function Hero() {
                 <DashboardMockup />
               </BrowserFrame>
               <div className="mt-3 text-center text-[11px] font-medium uppercase tracking-[0.2em] text-mist-500">
-                Desktop Back Office
+                {t.hero.deviceDesktop}
               </div>
             </div>
 
@@ -141,7 +141,7 @@ export function Hero() {
                 <PhoneMockup />
               </div>
               <div className="mt-1 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-mist-500">
-                Mobile POS
+                {t.hero.deviceMobile}
               </div>
             </motion.div>
 
@@ -157,7 +157,7 @@ export function Hero() {
                 <KitchenMockup />
               </div>
               <div className="mt-2 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-mist-500">
-                Kitchen Display
+                {t.hero.deviceKitchen}
               </div>
             </motion.div>
           </motion.div>

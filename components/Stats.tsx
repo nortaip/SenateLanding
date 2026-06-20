@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useInView, motion } from "framer-motion";
-import { stats } from "@/lib/data";
+import { statMeta } from "@/lib/data";
 import { Reveal } from "./ui/Reveal";
+import { useI18n } from "./i18n/LanguageProvider";
 
 function Counter({
   value,
@@ -45,6 +46,7 @@ function Counter({
 }
 
 export function Stats() {
+  const { t } = useI18n();
   return (
     <section className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -57,9 +59,9 @@ export function Stats() {
               aria-hidden
             />
             <div className="relative grid grid-cols-2 gap-8 lg:grid-cols-4">
-              {stats.map((s, i) => (
+              {statMeta.map((s, i) => (
                 <motion.div
-                  key={s.label}
+                  key={i}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -69,7 +71,7 @@ export function Stats() {
                   <div className="font-display text-4xl font-bold text-gradient-gold sm:text-5xl">
                     <Counter value={s.value} suffix={s.suffix} decimals={s.decimals} />
                   </div>
-                  <div className="mt-2 text-sm text-mist-300">{s.label}</div>
+                  <div className="mt-2 text-sm text-mist-300">{t.stats.labels[i]}</div>
                 </motion.div>
               ))}
             </div>
