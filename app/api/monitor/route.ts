@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { BACKEND_URL, buildDemo, normalize } from "@/lib/monitor";
+import { BACKEND_URL, normalize, offlineSnapshot } from "@/lib/monitor";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -48,9 +48,11 @@ export async function GET(request: Request) {
 
     return NextResponse.json(snap, { headers: { "cache-control": "no-store" } });
   } catch (err) {
-    const snap = buildDemo();
-    snap.ok = false;
-    snap.note = `live backend unavailable from server — demo feed (${(err as Error).message})`;
-    return NextResponse.json(snap, { headers: { "cache-control": "no-store" } });
+    // No mock data: report the real failure and an empty fleet.
+    const snap = offlineSnapshot(`backend error: ${(err as Error).message}`);
+    return NextResponse.json(snap, {
+      status: 502,
+      headers: { "cache-control": "no-store" },
+    });
   }
 }

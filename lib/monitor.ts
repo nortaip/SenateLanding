@@ -33,12 +33,24 @@ export type ServerHealth = {
 
 export type MonitorSnapshot = {
   ok: boolean;
-  source: "live" | "demo";
+  source: "live" | "offline";
   ts: number;
   server: ServerHealth;
   devices: Device[];
   note?: string;
 };
+
+export const OFFLINE_SERVER: ServerHealth = {
+  online: false,
+  ms: 0,
+  cpu: 0,
+  ram: 0,
+  uptimeSec: 0,
+};
+
+export function offlineSnapshot(note: string): MonitorSnapshot {
+  return { ok: false, source: "offline", ts: Date.now(), server: OFFLINE_SERVER, devices: [], note };
+}
 
 /* ----------------------------- helpers ----------------------------- */
 
@@ -175,67 +187,4 @@ export function normalize(json: unknown, measuredMs: number): MonitorSnapshot {
   }
 
   return { ok: true, source: "live", ts: now, server, devices };
-}
-
-/* ----------------------------- demo data ----------------------------- */
-
-function hash(str: string): number {
-  let h = 5381;
-  for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
-  return h;
-}
-
-type RosterEntry = { id: string; name: string; model: string; ip: string; version: string; location: string; pinned?: boolean };
-
-const ROSTER: RosterEntry[] = [
-  { id: "SRV-CORE-00", name: "core-api", model: "Senate Cloud", ip: "10.0.0.2", version: "16.4.2", location: "DC / Frankfurt", pinned: true },
-  { id: "POS-WIN-01", name: "Windows POS · Bar", model: "WinTerm X3", ip: "192.168.1.21", version: "4.5.5", location: "Harbor House" },
-  { id: "POS-WIN-02", name: "Windows POS · Floor", model: "WinTerm X3", ip: "192.168.1.22", version: "4.5.5", location: "Harbor House" },
-  { id: "KDS-KIT-03", name: "Kitchen Display", model: "KDS-22", ip: "192.168.1.31", version: "4.5.4", location: "Harbor House" },
-  { id: "MOB-POS-04", name: "Mobile POS · Sec A", model: "iPad Air", ip: "192.168.1.41", version: "4.5.5", location: "Cedar & Sage" },
-  { id: "MOB-POS-05", name: "Mobile POS · Sec B", model: "Galaxy Tab", ip: "192.168.1.42", version: "4.5.3", location: "Cedar & Sage" },
-  { id: "KSK-SELF-06", name: "Self-Order Kiosk", model: "Kiosk Pro", ip: "192.168.1.51", version: "4.5.5", location: "Lumen Lounge" },
-  { id: "KSK-SELF-07", name: "Self-Order Kiosk", model: "Kiosk Pro", ip: "192.168.1.52", version: "4.5.5", location: "Lumen Lounge" },
-  { id: "PRN-KIT-08", name: "Kitchen Printer", model: "Epson TM", ip: "192.168.1.61", version: "1.2.0", location: "Trattoria Nove" },
-  { id: "PRN-BAR-09", name: "Bar Printer", model: "Epson TM", ip: "192.168.1.62", version: "1.2.0", location: "Trattoria Nove" },
-  { id: "QR-GATE-10", name: "QR Order Gateway", model: "Edge Node", ip: "10.0.0.7", version: "16.3.6", location: "DC / Frankfurt", pinned: true },
-  { id: "MOB-POS-11", name: "Mobile POS · Patio", model: "iPad Mini", ip: "192.168.1.43", version: "4.5.2", location: "Spice Route" },
-  { id: "RTR-EDGE-12", name: "Branch Router", model: "MikroTik", ip: "192.168.1.1", version: "7.14", location: "Urban Plate" },
-  { id: "KDS-KIT-13", name: "Kitchen Display", model: "KDS-22", ip: "192.168.1.32", version: "4.5.4", location: "Urban Plate" },
-];
-
-export function buildDemo(now = Date.now()): MonitorSnapshot {
-  const devices: Device[] = ROSTER.map((r) => {
-    const onWin = Math.floor(now / 25_000); // state holds ~25s
-    const online = r.pinned ? true : hash(`${r.id}:on:${onWin}`) % 100 > 14; // ~86% up
-    const msWin = Math.floor(now / 4_000);
-    const ms = online ? 6 + (hash(`${r.id}:ms:${msWin}`) % 70) : 0;
-    const usage = online ? hash(`${r.id}:us:${Math.floor(now / 8_000)}`) % 96 : 0;
-    const health = online ? clamp(100 - ms / 4 - usage / 6, 25, 100) : 0;
-    const lastSeen = online ? now - (hash(`${r.id}:ls:${msWin}`) % 4_000) : now - (60_000 + (hash(r.id) % 600_000));
-    return {
-      id: r.id,
-      name: r.name,
-      online,
-      ms,
-      health,
-      usage,
-      lastSeen,
-      ip: r.ip,
-      model: r.model,
-      version: r.version,
-      location: r.location,
-    };
-  });
-
-  const sMs = 14 + (hash(`srv:${Math.floor(now / 4_000)}`) % 22);
-  const server: ServerHealth = {
-    online: true,
-    ms: sMs,
-    cpu: 28 + (hash(`cpu:${Math.floor(now / 6_000)}`) % 46),
-    ram: 41 + (hash(`ram:${Math.floor(now / 9_000)}`) % 38),
-    uptimeSec: 1_492_800 + Math.floor(now / 1000) % 1_000_000,
-  };
-
-  return { ok: true, source: "demo", ts: now, server, devices };
 }
