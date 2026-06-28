@@ -67,15 +67,9 @@ export function Navbar() {
             <LanguageSwitcher />
             <a
               href="#"
-              className="text-sm font-medium text-mist-300 transition-colors hover:text-mist-100"
+              className="rounded-xl border border-gold-500/30 px-4 py-2 text-sm font-semibold text-gold-300 transition-colors hover:bg-gold-500/10"
             >
               {t.nav.signIn}
-            </a>
-            <a
-              href="#demo"
-              className="rounded-xl bg-gradient-to-br from-gold-300 to-gold-600 px-4 py-2 text-sm font-semibold text-ink-900 shadow-lg transition-transform hover:scale-[1.03]"
-            >
-              {t.nav.requestDemo}
             </a>
           </div>
 
@@ -112,11 +106,11 @@ export function Navbar() {
                 </a>
               ))}
               <a
-                href="#demo"
+                href="#"
                 onClick={() => setOpen(false)}
-                className="mt-1 block rounded-xl bg-gradient-to-br from-gold-300 to-gold-600 px-4 py-3 text-center text-sm font-semibold text-ink-900"
+                className="mt-1 block rounded-xl border border-gold-500/30 px-4 py-3 text-center text-sm font-semibold text-gold-300"
               >
-                {t.nav.requestDemo}
+                {t.nav.signIn}
               </a>
             </div>
           </motion.div>

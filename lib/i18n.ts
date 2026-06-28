@@ -24,6 +24,7 @@ const en = {
       "Manage sales, tables, kitchen operations, inventory, staff, and reporting from a single platform — built for restaurants, cafes, food courts, lounges, and chains.",
     requestDemo: "Request Demo",
     watchVideo: "Watch Video",
+    explore: "Explore Platform",
     note: "No credit card required · 14-day trial · Setup in under an hour",
     deviceDesktop: "Desktop Back Office",
     deviceMobile: "Mobile POS",
@@ -345,9 +346,10 @@ const en = {
     titleTop: "Ready to Transform Your ",
     titleAccent: "Restaurant Operations?",
     subtitle:
-      "Join 14,000+ restaurants running smarter, faster service on Senate POS. See it live in a personalized demo.",
+      "Join 14,000+ restaurants running smarter, faster service on Senate POS. See the full platform in action.",
     requestDemo: "Request Demo",
     watchVideo: "Watch Video",
+    learnMore: "Learn More",
     note: "14-day free trial · No credit card · Cancel anytime",
   },
   about: {
@@ -393,7 +395,7 @@ const en = {
       },
       {
         title: "Contact",
-        links: ["Request Demo", "Talk to Sales", "Partnerships", "Careers", "Press Kit", "About Us"],
+        links: ["Contact Us", "Talk to Sales", "Partnerships", "Careers", "Press Kit", "About Us"],
       },
     ],
     copyright: "© {year} Senate POS. All rights reserved.",
@@ -421,6 +423,7 @@ const az: Dict = {
       "Satışları, masaları, mətbəx əməliyyatlarını, anbarı, işçi heyətini və hesabatları vahid platformadan idarə edin — restoranlar, kafelər, yemək məkanları, lonçlar və şəbəkələr üçün hazırlanıb.",
     requestDemo: "Demo Tələb Et",
     watchVideo: "Videoya Bax",
+    explore: "Platformanı Kəşf Et",
     note: "Kart tələb olunmur · 14 günlük sınaq · Bir saatdan az quraşdırma",
     deviceDesktop: "Masaüstü Back Office",
     deviceMobile: "Mobil POS",
@@ -742,9 +745,10 @@ const az: Dict = {
     titleTop: "Restoran Əməliyyatlarınızı ",
     titleAccent: "Dəyişməyə Hazırsınız?",
     subtitle:
-      "Senate POS-da daha ağıllı, daha sürətli xidmət göstərən 14,000+ restorana qoşulun. Fərdi demoda canlı görün.",
+      "Senate POS-da daha ağıllı, daha sürətli xidmət göstərən 14,000+ restorana qoşulun. Platformanı tam fəaliyyətdə görün.",
     requestDemo: "Demo Tələb Et",
     watchVideo: "Videoya Bax",
+    learnMore: "Ətraflı",
     note: "14 günlük pulsuz sınaq · Kart yoxdur · İstənilən vaxt ləğv edin",
   },
   about: {
@@ -790,7 +794,7 @@ const az: Dict = {
       },
       {
         title: "Əlaqə",
-        links: ["Demo Tələb Et", "Satışla Əlaqə", "Tərəfdaşlıqlar", "Karyera", "Press Kit", "Haqqımızda"],
+        links: ["Bizimlə Əlaqə", "Satışla Əlaqə", "Tərəfdaşlıqlar", "Karyera", "Press Kit", "Haqqımızda"],
       },
     ],
     copyright: "© {year} Senate POS. Bütün hüquqlar qorunur.",
@@ -816,6 +820,7 @@ const ru: Dict = {
       "Управляйте продажами, столами, кухонными операциями, складом, персоналом и отчётностью с единой платформы — создано для ресторанов, кафе, фуд-кортов, лаунджей и сетей.",
     requestDemo: "Запросить демо",
     watchVideo: "Смотреть видео",
+    explore: "Изучить платформу",
     note: "Без кредитной карты · 14 дней пробного периода · Настройка менее чем за час",
     deviceDesktop: "Десктоп Back Office",
     deviceMobile: "Мобильный POS",
@@ -1137,9 +1142,10 @@ const ru: Dict = {
     titleTop: "Готовы преобразить ",
     titleAccent: "работу вашего ресторана?",
     subtitle:
-      "Присоединяйтесь к 14 000+ ресторанам, которые работают умнее и быстрее на Senate POS. Посмотрите вживую на персональном демо.",
+      "Присоединяйтесь к 14 000+ ресторанам, которые работают умнее и быстрее на Senate POS. Посмотрите платформу в действии.",
     requestDemo: "Запросить демо",
     watchVideo: "Смотреть видео",
+    learnMore: "Подробнее",
     note: "14 дней бесплатно · Без карты · Отмена в любое время",
   },
   about: {
@@ -1185,7 +1191,7 @@ const ru: Dict = {
       },
       {
         title: "Контакты",
-        links: ["Запросить демо", "Связаться с продажами", "Партнёрство", "Карьера", "Пресс-кит", "О нас"],
+        links: ["Связаться с нами", "Связаться с продажами", "Партнёрство", "Карьера", "Пресс-кит", "О нас"],
       },
     ],
     copyright: "© {year} Senate POS. Все права защищены.",
