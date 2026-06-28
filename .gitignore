@@ -27,6 +27,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# php backend runtime
+backend/api/logs/*.log
+
 # vercel
 .vercel
 

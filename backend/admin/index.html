@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Senate Activation — Master Admin Paneli</title>
+<style>
+  :root {
+    --bg:#0F1014; --surface:#1A1B22; --card:#22232C; --border:#2D2E38;
+    --text:#E5E7EB; --muted:#9CA3AF; --accent:#6366F1; --accent2:#818CF8;
+    --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:'Segoe UI',Tahoma,sans-serif; background:var(--bg);
+    color:var(--text); min-height:100vh; line-height:1.5;
+  }
+  /* ── Login ── */
+  #login-screen {
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; padding:20px;
+  }
+  .login-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:14px; padding:32px; width:100%; max-width:420px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.4);
+  }
+  .login-card h1 {
+    font-size:22px; font-weight:900; margin-bottom:4px;
+    color:var(--accent2);
+  }
+  .login-card p { color:var(--muted); font-size:13px; margin-bottom:20px; }
+  /* ── App layout ── */
+  #app-screen { display:none; min-height:100vh; }
+  .topbar {
+    background:var(--surface); border-bottom:1px solid var(--border);
+    padding:14px 24px; display:flex; align-items:center;
+    justify-content:space-between;
+  }
+  .brand { font-weight:900; font-size:16px; color:var(--accent2); }
+  .brand small { color:var(--muted); font-weight:500; margin-left:8px; }
+  .tabs { display:flex; gap:4px; padding:0 24px; background:var(--surface);
+    border-bottom:1px solid var(--border); }
+  .tab {
+    padding:12px 18px; cursor:pointer; border:none; background:none;
+    color:var(--muted); font-size:13px; font-weight:600;
+    border-bottom:2px solid transparent;
+  }
+  .tab.active { color:var(--accent2); border-bottom-color:var(--accent2); }
+  .tab:hover { color:var(--text); }
+  main { padding:24px; max-width:1400px; margin:0 auto; }
+  /* ── Common ── */
+  input,select,textarea,button {
+    font-family:inherit; font-size:13px;
+  }
+  input[type="text"],input[type="email"],input[type="number"],
+  input[type="tel"],input[type="url"],textarea,select {
+    background:var(--card); border:1px solid var(--border);
+    color:var(--text); padding:10px 12px; border-radius:8px;
+    width:100%; outline:none; transition:border .15s;
+  }
+  input:focus,textarea:focus,select:focus { border-color:var(--accent); }
+  button {
+    border:none; padding:10px 16px; border-radius:8px; cursor:pointer;
+    font-weight:600; transition:filter .15s;
+  }
+  button:hover { filter:brightness(1.15); }
+  button:disabled { opacity:0.5; cursor:not-allowed; }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-success { background:var(--success); color:white; }
+  .btn-danger  { background:var(--danger); color:white; }
+  .btn-ghost   { background:transparent; color:var(--muted);
+    border:1px solid var(--border); }
+  .btn-sm { padding:6px 10px; font-size:12px; }
+  label {
+    display:block; font-size:11px; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;
+  }
+  .field { margin-bottom:14px; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; }
+  .row > .field { flex:1; min-width:180px; }
+  .card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:12px; padding:18px; margin-bottom:16px;
+  }
+  .card-head {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border);
+  }
+  .card-head h2 { font-size:16px; font-weight:800; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { padding:10px 8px; text-align:left; font-size:13px;
+    border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:700; font-size:11px;
+    text-transform:uppercase; }
+  tr:hover { background:rgba(99,102,241,0.05); }
+  .badge {
+    display:inline-block; padding:3px 8px; border-radius:6px;
+    font-size:10px; font-weight:800; text-transform:uppercase;
+  }
+  .badge-success { background:rgba(16,185,129,0.15); color:var(--success); }
+  .badge-warning { background:rgba(245,158,11,0.15); color:var(--warning); }
+  .badge-danger  { background:rgba(239,68,68,0.15);  color:var(--danger); }
+  .badge-muted   { background:rgba(156,163,175,0.15); color:var(--muted); }
+  /* ── Modal ── */
+  .modal-bg {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7);
+    display:none; align-items:center; justify-content:center;
+    z-index:1000; padding:20px;
+  }
+  .modal-bg.show { display:flex; }
+  .modal {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:12px; padding:20px; width:100%; max-width:520px;
+    max-height:90vh; overflow:auto;
+  }
+  .modal h3 { font-size:16px; margin-bottom:14px; }
+  .modal-actions {
+    display:flex; gap:8px; justify-content:flex-end; margin-top:18px;
+    padding-top:14px; border-top:1px solid var(--border);
+  }
+  /* ── Toast ── */
+  .toast {
+    position:fixed; bottom:20px; right:20px;
+    background:var(--card); border:1px solid var(--border);
+    border-radius:10px; padding:12px 16px; font-size:13px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4); z-index:2000;
+    animation: toastIn 0.2s; max-width:360px;
+  }
+  .toast.success { border-left:4px solid var(--success); }
+  .toast.error   { border-left:4px solid var(--danger); }
+  @keyframes toastIn { from {transform:translateY(20px); opacity:0;} }
+  /* ── Misc ── */
+  .empty { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
+  .loading { text-align:center; padding:30px; color:var(--muted); }
+  .pill {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:4px 10px; border-radius:20px; font-size:11px;
+    background:rgba(99,102,241,0.15); color:var(--accent2);
+  }
+  .code-display {
+    font-family:'Courier New',monospace; font-size:24px;
+    font-weight:900; letter-spacing:6px; color:var(--success);
+    text-align:center; padding:12px; background:rgba(16,185,129,0.10);
+    border:2px dashed var(--success); border-radius:10px; margin:12px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Login ─── -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>🔐 Master Admin</h1>
+    <p>Senate Activation idarəetmə panelinə daxil olmaq üçün bearer token-i daxil edin.</p>
+    <div class="field">
+      <label>API Bearer Token</label>
+      <input type="text" id="token-input" placeholder="1tb5SiScs..." />
+    </div>
+    <div class="field">
+      <label>API Base URL</label>
+      <input type="url" id="base-input"
+        value="https://appmobile.svurguns.cyou/Data/MobilePoss/api" />
+    </div>
+    <button class="btn-primary" style="width:100%;" onclick="doLogin()">
+      Giriş
+    </button>
+    <p style="margin-top:14px; font-size:11px; color:var(--muted);">
+      Token <code>config.php</code>-də <code>$API_TOKENS</code>-da olmalıdır.
+    </p>
+  </div>
+</div>
+
+<!-- ─── App ─── -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="brand">
+      ⚡ Senate Activation
+      <small>Master Admin Paneli</small>
+    </div>
+    <button class="btn-ghost btn-sm" onclick="doLogout()">Çıxış</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="owners" onclick="switchTab('owners')">
+      👥 Obyekt sahibləri
+    </button>
+    <button class="tab" data-tab="venues" onclick="switchTab('venues')">
+      🏪 Obyektlər (venues)
+    </button>
+    <button class="tab" data-tab="devices" onclick="switchTab('devices')">
+      📱 Cihazlar
+    </button>
+  </div>
+
+  <main>
+    <!-- Owners tab -->
+    <div id="tab-owners" class="tab-content">
+      <div class="card">
+        <div class="card-head">
+          <h2>Obyekt sahibləri</h2>
+          <button class="btn-primary btn-sm" onclick="openOwnerModal()">
+            ➕ Yeni sahib
+          </button>
+        </div>
+        <div id="owners-list"></div>
+      </div>
+    </div>
+
+    <!-- Venues tab -->
+    <div id="tab-venues" class="tab-content" style="display:none;">
+      <div class="card">
+        <div class="card-head">
+          <h2>Obyektlər</h2>
+          <div style="display:flex; gap:8px;">
+            <select id="venue-owner-filter" style="width:auto;"
+              onchange="loadVenues()">
+              <option value="">Bütün sahiblər</option>
+            </select>
+            <button class="btn-primary btn-sm" onclick="openVenueModal()">
+              ➕ Yeni obyekt
+            </button>
+          </div>
+        </div>
+        <div id="venues-list"></div>
+      </div>
+    </div>
+
+    <!-- Devices tab -->
+    <div id="tab-devices" class="tab-content" style="display:none;">
+      <div class="card">
+        <div class="card-head">
+          <h2>Cihaz aktivasiyaları</h2>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <select id="device-venue-filter" style="width:auto;"
+              onchange="loadDevices()">
+              <option value="">Bütün obyektlər</option>
+            </select>
+            <input id="device-search" type="text"
+              placeholder="🔍 stable_id / IMEI / ad"
+              style="width:220px;"
+              onkeydown="if(event.key==='Enter') loadDevices()" />
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+          <button class="btn-ghost btn-sm" id="ds-inactive"
+            onclick="setDeviceStatus('inactive')">⏳ Pending</button>
+          <button class="btn-ghost btn-sm" id="ds-active"
+            onclick="setDeviceStatus('active')">✅ Aktiv</button>
+          <button class="btn-ghost btn-sm" id="ds-blocked"
+            onclick="setDeviceStatus('blocked')">⛔ Bloklu</button>
+          <button class="btn-ghost btn-sm" id="ds-all"
+            onclick="setDeviceStatus('all')">📋 Hamısı</button>
+        </div>
+        <div id="devices-list"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ─── Owner modal ─── -->
+<div class="modal-bg" id="owner-modal">
+  <div class="modal">
+    <h3 id="owner-modal-title">Yeni obyekt sahibi</h3>
+    <input type="hidden" id="owner-id" />
+    <div class="row">
+      <div class="field">
+        <label>Ad *</label>
+        <input id="owner-first-name" type="text" />
+      </div>
+      <div class="field">
+        <label>Soyad *</label>
+        <input id="owner-last-name" type="text" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Telefon * (unikal)</label>
+      <input id="owner-phone" type="tel" placeholder="+994 50 ..." />
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input id="owner-email" type="email" />
+    </div>
+    <div class="field">
+      <label>Qeyd</label>
+      <textarea id="owner-notes" rows="3"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('owner-modal')">Ləğv</button>
+      <button class="btn-primary" onclick="saveOwner()">Yadda saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Venue modal ─── -->
+<div class="modal-bg" id="venue-modal">
+  <div class="modal">
+    <h3 id="venue-modal-title">Yeni obyekt</h3>
+    <input type="hidden" id="venue-id" />
+    <div class="field">
+      <label>Obyekt sahibi</label>
+      <select id="venue-owner-id">
+        <option value="">— Sahibsiz —</option>
+      </select>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Kod * (admin yazır)</label>
+        <input id="venue-code" type="text" placeholder="SEN-01" />
+      </div>
+      <div class="field">
+        <label>Ad</label>
+        <input id="venue-name" type="text" placeholder="Senate Nizami" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Domain</label>
+        <input id="venue-domain" type="text" placeholder="senate" />
+      </div>
+      <div class="field">
+        <label>Cihaz limit-i</label>
+        <input id="venue-max-devices" type="number" min="0" value="0" />
+      </div>
+    </div>
+    <div class="field">
+      <label>API Base URL (FastAPI)</label>
+      <input id="venue-api-url" type="url"
+        placeholder="http://senate.svurguns.cyou:8980" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('venue-modal')">Ləğv</button>
+      <button class="btn-primary" onclick="saveVenue()">Yadda saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Owner detail modal (manage attached venues) ─── -->
+<div class="modal-bg" id="owner-detail-modal">
+  <div class="modal" style="max-width:720px;">
+    <h3 id="owner-detail-title">Obyektlər</h3>
+    <div id="owner-detail-info" style="margin-bottom:14px; padding:12px;
+      background:rgba(99,102,241,0.10); border-radius:8px; font-size:12px;">
+    </div>
+
+    <h4 style="font-size:13px; margin-bottom:8px;
+      color:var(--muted); text-transform:uppercase;">
+      Bağlı obyektlər
+    </h4>
+    <div id="owner-detail-attached"></div>
+
+    <h4 style="font-size:13px; margin:18px 0 8px;
+      color:var(--muted); text-transform:uppercase;">
+      Yeni obyekt bağla
+    </h4>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <select id="owner-detail-add-venue" style="flex:1;">
+        <option value="">Bağlanmamış obyektlərdən seçin...</option>
+      </select>
+      <button class="btn-success btn-sm" onclick="attachVenueToOwner()">
+        ➕ Bağla
+      </button>
+    </div>
+    <button class="btn-primary btn-sm" style="margin-top:12px; width:100%;"
+      onclick="createVenueForCurrentOwner()">
+      ✨ Bu sahibə yeni obyekt yarat
+    </button>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('owner-detail-modal')">Bağla</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Activation code modal ─── -->
+<div class="modal-bg" id="code-modal">
+  <div class="modal">
+    <h3 id="code-modal-title">Aktivasiya kodu</h3>
+    <p style="color:var(--muted); font-size:12px; margin-bottom:12px;">
+      Bu kod TƏK DƏFƏ istifadə olunur.  Back-office user kodu yazandan
+      sonra server möhürləyəcək və eyni kod bir də işləməz.
+    </p>
+    <div class="field">
+      <label>TTL (saat)</label>
+      <input id="code-ttl" type="number" min="1" max="168" value="24" />
+    </div>
+    <div id="code-generated"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('code-modal')">Bağla</button>
+      <button class="btn-primary" id="code-generate-btn"
+        onclick="generateCode()">⚡ Kod yarat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────
+const STATE = {
+  token: localStorage.getItem('mp_token') || '',
+  baseUrl: localStorage.getItem('mp_base') ||
+    'https://appmobile.svurguns.cyou/Data/MobilePoss/api',
+  owners: [],
+  venues: [],
+  devices: [],
+};
+
+// ─── Auth ──────────────────────────────────────────────────────
+function doLogin() {
+  const token = document.getElementById('token-input').value.trim();
+  const base  = document.getElementById('base-input').value.trim()
+    .replace(/\/+$/, '');
+  if (!token || !base) {
+    toast('Token və URL mütləqdir', 'error');
+    return;
+  }
+  STATE.token = token;
+  STATE.baseUrl = base;
+  localStorage.setItem('mp_token', token);
+  localStorage.setItem('mp_base', base);
+  showApp();
+}
+function doLogout() {
+  localStorage.removeItem('mp_token');
+  STATE.token = '';
+  showLogin();
+}
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  loadOwners();
+}
+function showLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+// ─── API helpers ────────────────────────────────────────────────
+async function api(path, options = {}) {
+  const opts = {
+    method: options.method || 'GET',
+    headers: {
+      'Authorization': `Bearer ${STATE.token}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  };
+  if (options.body) opts.body = JSON.stringify(options.body);
+  const r = await fetch(`${STATE.baseUrl}${path}`, opts);
+  const text = await r.text();
+  let data;
+  try { data = JSON.parse(text); } catch (_) { data = { ok: false, error: text }; }
+  if (!r.ok || data.ok === false) {
+    const msg = data.message || data.detail || data.error || `HTTP ${r.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+function toast(msg, type = 'success') {
+  const div = document.createElement('div');
+  div.className = `toast ${type}`;
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 3500);
+}
+function escape(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ─── Tabs ───────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-content').forEach(c =>
+    c.style.display = 'none');
+  document.getElementById(`tab-${name}`).style.display = 'block';
+  if (name === 'owners')  loadOwners();
+  if (name === 'venues')  loadVenues();
+  if (name === 'devices') setDeviceStatus(DEVICE_STATUS || 'inactive');
+}
+
+// ─── Owners ─────────────────────────────────────────────────────
+async function loadOwners() {
+  const div = document.getElementById('owners-list');
+  div.innerHTML = '<div class="loading">Yüklənir...</div>';
+  try {
+    const r = await api('/owners.php?limit=200');
+    STATE.owners = r.data || [];
+    renderOwners();
+    populateOwnerSelectors();
+  } catch (e) {
+    div.innerHTML = `<div class="empty">Xəta: ${escape(e.message)}</div>`;
+  }
+}
+function renderOwners() {
+  const div = document.getElementById('owners-list');
+  if (!STATE.owners.length) {
+    div.innerHTML = '<div class="empty">Heç bir sahib yoxdur. ➕ ilə əlavə edin.</div>';
+    return;
+  }
+  div.innerHTML = `<table>
+    <thead><tr>
+      <th>Ad / Soyad</th><th>Telefon</th><th>Email</th>
+      <th>Obyekt</th><th>Cihaz</th><th></th>
+    </tr></thead>
+    <tbody>${STATE.owners.map(o => `
+      <tr>
+        <td><strong>${escape(o.first_name)} ${escape(o.last_name)}</strong></td>
+        <td>${escape(o.phone)}</td>
+        <td>${escape(o.email || '—')}</td>
+        <td><span class="pill">${o.venue_count} obyekt</span></td>
+        <td>${o.active_devices} / ${o.total_limit || '∞'}</td>
+        <td style="text-align:right; white-space:nowrap;">
+          <button class="btn-success btn-sm" onclick='openOwnerDetail(${o.id})'>🏪 Obyektlər</button>
+          <button class="btn-ghost btn-sm" onclick='editOwner(${o.id})'>Redaktə</button>
+          <button class="btn-danger btn-sm" onclick='deleteOwner(${o.id})'>Sil</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+function openOwnerModal() {
+  document.getElementById('owner-modal-title').textContent = 'Yeni obyekt sahibi';
+  ['owner-id','owner-first-name','owner-last-name','owner-phone',
+   'owner-email','owner-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('owner-modal').classList.add('show');
+}
+function editOwner(id) {
+  const o = STATE.owners.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('owner-modal-title').textContent = 'Sahibi redaktə et';
+  document.getElementById('owner-id').value = o.id;
+  document.getElementById('owner-first-name').value = o.first_name || '';
+  document.getElementById('owner-last-name').value = o.last_name || '';
+  document.getElementById('owner-phone').value = o.phone || '';
+  document.getElementById('owner-email').value = o.email || '';
+  document.getElementById('owner-notes').value = o.notes || '';
+  document.getElementById('owner-modal').classList.add('show');
+}
+async function saveOwner() {
+  const id = document.getElementById('owner-id').value;
+  const body = {
+    first_name: document.getElementById('owner-first-name').value.trim(),
+    last_name:  document.getElementById('owner-last-name').value.trim(),
+    phone:      document.getElementById('owner-phone').value.trim(),
+    email:      document.getElementById('owner-email').value.trim() || null,
+    notes:      document.getElementById('owner-notes').value.trim() || null,
+  };
+  if (!body.first_name || !body.last_name || !body.phone) {
+    toast('Ad, Soyad və Telefon mütləqdir', 'error');
+    return;
+  }
+  try {
+    if (id) {
+      await api(`/owners.php?id=${id}`, { method: 'PUT', body });
+      toast('Yeniləndi');
+    } else {
+      await api('/owners.php', { method: 'POST', body });
+      toast('Yaradıldı');
+    }
+    closeModal('owner-modal');
+    loadOwners();
+  } catch (e) { toast(e.message, 'error'); }
+}
+async function deleteOwner(id) {
+  if (!confirm('Sahibi silmək istəyirsiniz?')) return;
+  try {
+    await api(`/owners.php?id=${id}`, { method: 'DELETE' });
+    toast('Silindi');
+    loadOwners();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ─── Owner detail (manage attached venues) ──────────────────────
+let CURRENT_OWNER_ID = null;
+
+async function openOwnerDetail(ownerId) {
+  CURRENT_OWNER_ID = ownerId;
+  const owner = STATE.owners.find(o => o.id === ownerId);
+  if (!owner) return;
+
+  document.getElementById('owner-detail-title').textContent =
+    `${owner.first_name} ${owner.last_name} — obyektlər`;
+  document.getElementById('owner-detail-info').innerHTML = `
+    <strong>${escape(owner.first_name)} ${escape(owner.last_name)}</strong> ·
+    📞 ${escape(owner.phone)} ·
+    ${owner.email ? '📧 ' + escape(owner.email) : ''}
+  `;
+  document.getElementById('owner-detail-modal').classList.add('show');
+  await refreshOwnerDetail();
+}
+
+async function refreshOwnerDetail() {
+  // Hamısını çək: bu owner-in venue-ləri + bağlanmamış (owner_id NULL) venue-lər.
+  const attachedDiv = document.getElementById('owner-detail-attached');
+  attachedDiv.innerHTML = '<div class="loading">Yüklənir...</div>';
+  try {
+    // Owner-in venue-lərini owner detail-dən çək (limit + usage daxil).
+    const r = await api(`/owners.php?id=${CURRENT_OWNER_ID}`);
+    const venues = r.data?.venues || [];
+
+    if (!venues.length) {
+      attachedDiv.innerHTML = `<div class="empty"
+        style="padding:20px; font-size:12px;">
+        Bu sahibə hələ heç bir obyekt bağlanmayıb.
+        Aşağıdan birini seçib bağlayın və ya yenisini yaradın.
+      </div>`;
+    } else {
+      attachedDiv.innerHTML = `<table style="margin-bottom:8px;">
+        <thead><tr>
+          <th>Kod</th><th>Ad</th><th>Cihaz</th><th></th>
+        </tr></thead>
+        <tbody>${venues.map(v => `
+          <tr>
+            <td><span class="pill">${escape(v.code)}</span></td>
+            <td>${escape(v.name || '—')}</td>
+            <td>${v.active_devices||0} / ${v.max_devices||'∞'}</td>
+            <td style="text-align:right;">
+              <button class="btn-success btn-sm"
+                onclick='openCodeModal(${v.id}, "${escape(v.code)}")'>⚡ Kod</button>
+              <button class="btn-ghost btn-sm"
+                onclick='detachVenueFromOwner(${v.id})'>🔗 Ayır</button>
+            </td>
+          </tr>`).join('')}
+        </tbody></table>`;
+    }
+
+    // Bağlanmamış venue-ləri dropdown-a yükle.
+    const allRes = await api('/venues.php?limit=200');
+    const allVenues = allRes.data || [];
+    const unattached = allVenues.filter(v =>
+      !v.owner_id || v.owner_id == 0);
+    const sel = document.getElementById('owner-detail-add-venue');
+    sel.innerHTML = '<option value="">Bağlanmamış obyektlərdən seçin...</option>'
+      + unattached.map(v =>
+        `<option value="${v.id}">${escape(v.code)} — ${escape(v.name || '')}</option>`
+      ).join('');
+    if (!unattached.length) {
+      sel.innerHTML = '<option value="">Bağlanmamış obyekt yoxdur — yeni yaradın</option>';
+    }
+  } catch (e) {
+    attachedDiv.innerHTML = `<div class="empty">Xəta: ${escape(e.message)}</div>`;
+  }
+}
+
+async function attachVenueToOwner() {
+  const venueId = document.getElementById('owner-detail-add-venue').value;
+  if (!venueId) {
+    toast('Obyekt seçin', 'error');
+    return;
+  }
+  try {
+    await api(`/venues.php?id=${venueId}`, {
+      method: 'PUT',
+      body: { owner_id: CURRENT_OWNER_ID },
+    });
+    toast('Obyekt bağlandı');
+    await refreshOwnerDetail();
+    loadOwners(); // owner cədvəlində venue sayını yenilə
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function detachVenueFromOwner(venueId) {
+  if (!confirm('Bu obyekti sahibdən ayırmaq istəyirsiniz?  Obyekt silinmir, '
+              + 'sadəcə sahibsiz qalır və başqa sahibə bağlanması olur.')) return;
+  try {
+    await api(`/venues.php?id=${venueId}`, {
+      method: 'PUT',
+      body: { owner_id: null },
+    });
+    toast('Ayrıldı');
+    await refreshOwnerDetail();
+    loadOwners();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function createVenueForCurrentOwner() {
+  // Venue modal-ı aç, owner-i pre-fill et.
+  openVenueModal();
+  document.getElementById('venue-owner-id').value = CURRENT_OWNER_ID;
+  // Owner detail modal-ı bağla ki, üst-üstə yığılmasın.
+  closeModal('owner-detail-modal');
+}
+
+// ─── Venues ─────────────────────────────────────────────────────
+async function loadVenues() {
+  const div = document.getElementById('venues-list');
+  div.innerHTML = '<div class="loading">Yüklənir...</div>';
+  try {
+    const ownerId = document.getElementById('venue-owner-filter').value;
+    const q = ownerId ? `?limit=200&owner_id=${ownerId}` : '?limit=200';
+    const r = await api(`/venues.php${q}`);
+    STATE.venues = r.data || [];
+    // Hər venue üçün limit-i çək.
+    await Promise.all(STATE.venues.map(async v => {
+      try {
+        const l = await api(`/venue_device_limits.php?venue_id=${v.id}`);
+        v.max_devices  = l.limit;
+        v.usage        = l.usage;
+      } catch (_) { v.max_devices = 0; v.usage = {}; }
+    }));
+    renderVenues();
+    populateVenueSelectors();
+  } catch (e) {
+    div.innerHTML = `<div class="empty">Xəta: ${escape(e.message)}</div>`;
+  }
+}
+function renderVenues() {
+  const div = document.getElementById('venues-list');
+  if (!STATE.venues.length) {
+    div.innerHTML = '<div class="empty">Heç bir obyekt yoxdur.</div>';
+    return;
+  }
+  div.innerHTML = `<table>
+    <thead><tr>
+      <th>Kod</th><th>Ad</th><th>Sahib</th><th>Limit</th>
+      <th>API URL</th><th></th>
+    </tr></thead>
+    <tbody>${STATE.venues.map(v => {
+      const owner = STATE.owners.find(o => o.id === v.owner_id);
+      const ownerLabel = owner
+        ? `${escape(owner.first_name)} ${escape(owner.last_name)}`
+        : '<span class="badge badge-muted">Sahibsiz</span>';
+      const usage = v.usage || {};
+      const pct = v.max_devices > 0
+        ? Math.round((usage.active||0) / v.max_devices * 100) : 0;
+      return `<tr>
+        <td><span class="pill">${escape(v.code)}</span></td>
+        <td>${escape(v.name || '—')}</td>
+        <td>${ownerLabel}</td>
+        <td>${usage.active||0} / ${v.max_devices||'∞'}
+            ${v.max_devices > 0 ? `<small style="color:var(--muted)"> (${pct}%)</small>` : ''}</td>
+        <td style="font-family:monospace; font-size:11px; color:var(--muted);">
+          ${escape(v.api_base_url || '—')}</td>
+        <td style="text-align:right; white-space:nowrap;">
+          <button class="btn-success btn-sm" onclick='openCodeModal(${v.id}, "${escape(v.code)}")'>⚡ Kod</button>
+          <button class="btn-ghost btn-sm" onclick='editVenue(${v.id})'>Redaktə</button>
+          <button class="btn-danger btn-sm" onclick='deleteVenue(${v.id})'>Sil</button>
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody></table>`;
+}
+function populateOwnerSelectors() {
+  const ownerOptions = STATE.owners.map(o =>
+    `<option value="${o.id}">${escape(o.first_name)} ${escape(o.last_name)} — ${escape(o.phone)}</option>`
+  ).join('');
+  const venueOwnerSel = document.getElementById('venue-owner-id');
+  if (venueOwnerSel) venueOwnerSel.innerHTML =
+    '<option value="">— Sahibsiz —</option>' + ownerOptions;
+  const filter = document.getElementById('venue-owner-filter');
+  if (filter) filter.innerHTML =
+    '<option value="">Bütün sahiblər</option>' + ownerOptions;
+}
+function populateVenueSelectors() {
+  const venueOptions = STATE.venues.map(v =>
+    `<option value="${v.id}">${escape(v.code)} — ${escape(v.name || '')}</option>`
+  ).join('');
+  const filter = document.getElementById('device-venue-filter');
+  if (filter) filter.innerHTML =
+    '<option value="">Bütün obyektlər</option>' + venueOptions;
+}
+function openVenueModal() {
+  document.getElementById('venue-modal-title').textContent = 'Yeni obyekt';
+  ['venue-id','venue-code','venue-name','venue-domain',
+   'venue-api-url'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('venue-max-devices').value = 0;
+  document.getElementById('venue-owner-id').value = '';
+  document.getElementById('venue-modal').classList.add('show');
+}
+function editVenue(id) {
+  const v = STATE.venues.find(x => x.id === id);
+  if (!v) return;
+  document.getElementById('venue-modal-title').textContent = `Redaktə: ${v.code}`;
+  document.getElementById('venue-id').value = v.id;
+  document.getElementById('venue-code').value = v.code || '';
+  document.getElementById('venue-name').value = v.name || '';
+  document.getElementById('venue-domain').value = v.domain || '';
+  document.getElementById('venue-api-url').value = v.api_base_url || '';
+  document.getElementById('venue-max-devices').value = v.max_devices || 0;
+  document.getElementById('venue-owner-id').value = v.owner_id || '';
+  document.getElementById('venue-modal').classList.add('show');
+}
+async function saveVenue() {
+  const id = document.getElementById('venue-id').value;
+  const body = {
+    code:         document.getElementById('venue-code').value.trim(),
+    name:         document.getElementById('venue-name').value.trim(),
+    domain:       document.getElementById('venue-domain').value.trim(),
+    api_base_url: document.getElementById('venue-api-url').value.trim(),
+    owner_id:     document.getElementById('venue-owner-id').value || null,
+  };
+  const max = parseInt(document.getElementById('venue-max-devices').value || 0);
+  if (!body.code) {
+    toast('Kod mütləqdir', 'error');
+    return;
+  }
+  try {
+    let venueId = id ? parseInt(id) : null;
+    if (id) {
+      await api(`/venues.php?id=${id}`, { method: 'PUT', body });
+    } else {
+      const r = await api('/venues.php', { method: 'POST', body });
+      venueId = r.id;
+    }
+    // Limit-i təyin et.
+    if (venueId) {
+      await api('/venue_device_limits.php', {
+        method: 'POST',
+        body: { venue_id: venueId, max_devices: max },
+      });
+    }
+    toast(id ? 'Yeniləndi' : 'Yaradıldı');
+    closeModal('venue-modal');
+    loadVenues();
+    // Owner-in venue sayı dəyişdi — owners cədvəlini də yenilə.
+    loadOwners();
+  } catch (e) { toast(e.message, 'error'); }
+}
+async function deleteVenue(id) {
+  if (!confirm('Obyekti silmək istəyirsiniz?')) return;
+  try {
+    await api(`/venues.php?id=${id}`, { method: 'DELETE' });
+    toast('Silindi');
+    loadVenues();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ─── Activation codes ───────────────────────────────────────────
+let CURRENT_VENUE_ID = null;
+function openCodeModal(venueId, venueCode) {
+  CURRENT_VENUE_ID = venueId;
+  document.getElementById('code-modal-title').textContent =
+    `Aktivasiya kodu — ${venueCode}`;
+  document.getElementById('code-generated').innerHTML = '';
+  document.getElementById('code-ttl').value = 24;
+  document.getElementById('code-generate-btn').textContent = '⚡ Kod yarat';
+  document.getElementById('code-modal').classList.add('show');
+}
+async function generateCode() {
+  if (!CURRENT_VENUE_ID) return;
+  const ttl = parseInt(document.getElementById('code-ttl').value || 24);
+  try {
+    const r = await api('/venue_codes.php', {
+      method: 'POST',
+      body: { venue_id: CURRENT_VENUE_ID, ttl_hours: ttl, count: 1 },
+    });
+    const code = r.created[0].code;
+    const exp  = r.created[0].expires_at;
+    document.getElementById('code-generated').innerHTML = `
+      <div class="code-display">${escape(code)}</div>
+      <p style="text-align:center; font-size:11px; color:var(--muted);">
+        Vaxtı bitir: ${escape(exp)}<br>
+        Bu kodu back-office user-ə göndərin.  Bir dəfə istifadə olunur.
+      </p>
+      <button class="btn-ghost btn-sm" style="width:100%; margin-top:8px;"
+        onclick='copyText("${escape(code)}")'>📋 Kodu kopyala</button>
+    `;
+    document.getElementById('code-generate-btn').textContent = '↻ Yenidən yarat';
+    toast('Kod yaradıldı');
+  } catch (e) { toast(e.message, 'error'); }
+}
+function copyText(t) {
+  navigator.clipboard.writeText(t).then(() => toast('Kopyalandı'));
+}
+
+// ─── Devices ────────────────────────────────────────────────────
+let DEVICE_STATUS = 'inactive';
+
+function setDeviceStatus(s) {
+  DEVICE_STATUS = s;
+  ['inactive','active','blocked','all'].forEach(x => {
+    const btn = document.getElementById(`ds-${x}`);
+    if (!btn) return;
+    btn.classList.toggle('btn-primary', x === s);
+    btn.classList.toggle('btn-ghost',   x !== s);
+  });
+  loadDevices();
+}
+
+async function loadDevices() {
+  const div = document.getElementById('devices-list');
+  div.innerHTML = '<div class="loading">Yüklənir...</div>';
+  try {
+    const venueId = document.getElementById('device-venue-filter').value;
+    const search  = document.getElementById('device-search').value.trim();
+    const params  = new URLSearchParams({
+      status: DEVICE_STATUS,
+      limit:  200,
+    });
+    if (venueId) params.set('venue_id', venueId);
+    if (search)  params.set('search', search);
+    const r = await api(`/device_activations_view.php?${params}`);
+    STATE.devices = r.data || [];
+    renderDevices();
+  } catch (e) {
+    div.innerHTML = `<div class="empty">Xəta: ${escape(e.message)}</div>`;
+  }
+}
+function renderDevices() {
+  const div = document.getElementById('devices-list');
+  if (!STATE.devices.length) {
+    div.innerHTML = '<div class="empty">Bu filtrdə cihaz yoxdur.</div>';
+    return;
+  }
+  div.innerHTML = `<table>
+    <thead><tr>
+      <th>Cihaz</th><th>Stable ID / IMEI</th><th>Status</th>
+      <th>Obyekt</th><th>Aktivasiya kodu</th><th></th>
+    </tr></thead>
+    <tbody>${STATE.devices.map(d => {
+      const code = d.activation_code || '';
+      const hasCode = !!code;
+      const expired = d.code_expires_at &&
+        new Date(d.code_expires_at) < new Date();
+      const hasVenue = !!d.venue_id;
+      const isPending = d.status === 'inactive';
+      return `<tr>
+        <td>
+          <strong>${escape(d.device_name || '(adsız)')}</strong>
+          <div style="font-size:10px; color:var(--muted);">
+            ${escape(d.Divace_type || 'mobile')}
+            ${d.app_version ? '· v' + escape(d.app_version) : ''}
+          </div>
+        </td>
+        <td style="font-family:monospace; font-size:10px; color:var(--muted);">
+          ${escape(d.stable_id || '')}
+          ${d.imei ? '<br>IMEI: ' + escape(d.imei) : ''}
+        </td>
+        <td>${statusBadge(d.status)}</td>
+        <td>${hasVenue
+          ? `<span class="pill">${escape(d.venue_code || '')}</span>`
+          : '<span class="badge badge-warning">Bağlanmayıb</span>'}</td>
+        <td>${hasCode
+          ? `<div style="font-family:monospace; font-weight:900;
+                font-size:14px; letter-spacing:3px;
+                color:${expired ? 'var(--muted)' : 'var(--success)'};">
+                ${escape(code)}
+             </div>
+             <div style="font-size:9px; color:var(--muted);">
+               ${expired ? '⚠️ Vaxtı keçib' : 'Bitir: ' + escape(d.code_expires_at || '—')}
+             </div>`
+          : '<span style="color:var(--muted); font-size:11px;">—</span>'}
+        </td>
+        <td style="text-align:right; white-space:nowrap;">
+          ${!hasVenue ? `
+            <button class="btn-primary btn-sm"
+              onclick='bindDeviceToVenue(${d.id})'>🔗 Bağla</button>` : ''}
+          ${hasCode ? `
+            <button class="btn-ghost btn-sm"
+              onclick='copyText("${escape(code)}")'>📋 Kopyala</button>
+            <button class="btn-success btn-sm"
+              onclick='openDeviceQr(${d.id}, "${escape(code)}", "${escape(d.venue_code || '')}")'>📱 QR</button>` : ''}
+          ${isPending ? `
+            <button class="btn-ghost btn-sm"
+              onclick='regenerateCode(${d.id})'>↻ Yeni kod</button>` : ''}
+          ${d.status === 'active' ? `
+            <button class="btn-danger btn-sm"
+              onclick='blockDevice(${d.id})'>⛔ Blok</button>` : ''}
+          ${d.status === 'blocked' ? `
+            <button class="btn-success btn-sm"
+              onclick='unblockDevice(${d.id})'>✓ Aç</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody></table>`;
+}
+function statusBadge(s) {
+  const map = {
+    active:   ['Aktiv', 'success'],
+    inactive: ['Pending', 'warning'],
+    blocked:  ['Bloklu', 'danger'],
+  };
+  const [label, cls] = map[s] || [s, 'muted'];
+  return `<span class="badge badge-${cls}">${label}</span>`;
+}
+
+// ─── Device actions ─────────────────────────────────────────────
+async function regenerateCode(deviceId) {
+  if (!confirm('Bu cihaz üçün yeni 6-simvolluq aktivasiya kodu '
+              + 'yaradılacaq.  Köhnə kod expired işarələnəcək.')) return;
+  try {
+    const r = await api('/regenerate_code.php', {
+      method: 'POST',
+      body: { device_id: deviceId, ttl_hours: 24 },
+    });
+    toast(`Yeni kod: ${r.code}`);
+    loadDevices();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function bindDeviceToVenue(deviceId) {
+  if (!STATE.venues.length) {
+    try {
+      const r = await api('/venues.php?limit=200');
+      STATE.venues = r.data || [];
+    } catch (_) {}
+  }
+  let html = '<option value="">— Obyekt seçin —</option>';
+  STATE.venues.forEach(v => {
+    html += `<option value="${v.id}">${escape(v.code)} — ${escape(v.name || '')}</option>`;
+  });
+  const picker = `
+    <div class="modal-bg show" id="bind-modal">
+      <div class="modal">
+        <h3>Cihazı obyektə bağla</h3>
+        <p style="color:var(--muted); font-size:12px; margin-bottom:14px;">
+          Bu cihaz hələ bir obyektə bağlı deyil.  Hansı obyektə təyin
+          olunsun?  Sonra mobil ActivateDevice flow-u kodla aktivləşdirə bilər.
+        </p>
+        <select id="bind-venue-id">${html}</select>
+        <div class="modal-actions">
+          <button class="btn-ghost" onclick="document.getElementById('bind-modal').remove()">Ləğv</button>
+          <button class="btn-primary" id="bind-submit-btn">Bağla</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', picker);
+  document.getElementById('bind-submit-btn').onclick = async () => {
+    const vid = document.getElementById('bind-venue-id').value;
+    if (!vid) { toast('Obyekt seçin', 'error'); return; }
+    try {
+      await api(`/devices.php?id=${deviceId}`, {
+        method: 'PUT',
+        body: { venue_id: parseInt(vid) },
+      });
+      toast('Bağlandı');
+      document.getElementById('bind-modal').remove();
+      loadDevices();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+}
+
+async function blockDevice(deviceId) {
+  const reason = prompt('Blok səbəbi (admin paneldə görünür):',
+    'Admin tərəfindən bloklandı');
+  if (reason === null) return;
+  try {
+    await api(`/devices.php?id=${deviceId}`, {
+      method: 'PUT',
+      body: { status: 'blocked', block_reason: reason || null },
+    });
+    toast('Cihaz bloklandı');
+    loadDevices();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function unblockDevice(deviceId) {
+  if (!confirm('Cihazı blokdan çıxar?  Yenidən login açıla bilər.')) return;
+  try {
+    await api(`/devices.php?id=${deviceId}`, {
+      method: 'PUT',
+      body: { status: 'inactive', block_reason: null, blocked_at: null },
+    });
+    toast('Açıldı');
+    loadDevices();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ─── QR display (mobile QR aktivasiyası) ────────────────────────
+function openDeviceQr(deviceId, code, venueCode) {
+  const payload = JSON.stringify({
+    venue_code: venueCode,
+    code: code,
+  });
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(payload)}`;
+  const html = `
+    <div class="modal-bg show" id="qr-modal">
+      <div class="modal" style="text-align:center;">
+        <h3>Cihaz QR aktivasiyası</h3>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">
+          Telefonun QR aktivasiya ekranında bu QR-i skan edin.
+        </p>
+        <div style="background:white; padding:12px; border-radius:10px;
+          display:inline-block;">
+          <img src="${qrUrl}" alt="QR" width="320" height="320"
+            style="display:block;" />
+        </div>
+        <div style="margin-top:12px;">
+          <span class="pill" style="font-size:14px; padding:6px 14px;">
+            ${escape(venueCode)} · ${escape(code)}
+          </span>
+        </div>
+        <p style="font-size:11px; color:var(--muted); margin-top:8px;">
+          Mobil QR-i tanımırsa, əl ilə də daxil edə bilər.
+        </p>
+        <div class="modal-actions">
+          <button class="btn-ghost" onclick='copyText("${escape(code)}")'>
+            📋 Kodu kopyala
+          </button>
+          <button class="btn-primary"
+            onclick="document.getElementById('qr-modal').remove()">Bağla</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// ─── Modal helpers ──────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => {
+    if (e.target === bg) bg.classList.remove('show');
+  });
+});
+
+// ─── Boot ───────────────────────────────────────────────────────
+if (STATE.token) {
+  document.getElementById('token-input').value = STATE.token;
+  document.getElementById('base-input').value = STATE.baseUrl;
+  showApp();
+} else {
+  showLogin();
+}
+</script>
+</body>
+</html>
