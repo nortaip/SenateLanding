@@ -105,16 +105,23 @@ function fmtUptime(sec: number) {
   const m = Math.floor((sec % 3600) / 60);
   return `${d}d ${pad(h)}h ${pad(m)}m`;
 }
-function msColor(ms: number) {
+function msColor(ms: number | null) {
+  if (ms == null) return "#5f9c7e";
   if (ms <= 50) return "#46f08a";
   if (ms <= 120) return "#f5c452";
   return "#ff5d6c";
 }
-function healthColor(h: number) {
+function healthColor(h: number | null) {
+  if (h == null) return "#5f9c7e";
   if (h >= 70) return "#46f08a";
   if (h >= 40) return "#f5c452";
   return "#ff5d6c";
 }
+const avgOf = (nums: (number | null)[]) => {
+  const v = nums.filter((n): n is number => n != null);
+  return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null;
+};
+const dash = (v: number | null, suffix = "") => (v == null ? "—" : `${v}${suffix}`);
 
 /* ----------------------------- atoms ----------------------------- */
 
@@ -265,8 +272,9 @@ export function AdminConsole() {
     }
 
     for (const d of data.devices) {
+      if (d.ms == null) continue; // only trace real latency samples
       const arr = histRef.current.get(d.id) ?? [];
-      arr.push(d.online ? d.ms : 0);
+      arr.push(d.ms);
       if (arr.length > HIST_CAP) arr.shift();
       histRef.current.set(d.id, arr);
     }
@@ -275,13 +283,13 @@ export function AdminConsole() {
     if (onlineDevices.length) {
       for (let k = 0; k < 2; k++) {
         const d = onlineDevices[(cycle * 2 + k) % onlineDevices.length];
-        addLog("info", "PROBE", `HEALTHCHECK ${d.id} ok ms=${d.ms} health=${Math.round(d.health)}%`);
+        addLog("info", "PROBE", `HEALTHCHECK ${d.id} ok ms=${dash(d.ms)} health=${dash(d.health, "%")}`);
       }
     }
 
     const up = onlineDevices.length;
-    const avg = up ? Math.round(onlineDevices.reduce((a, d) => a + d.ms, 0) / up) : 0;
-    addLog("sys", "SCAN", `#${pad(cycle, 4)} :: ${up}/${data.devices.length} up · avg ${avg}ms · srv ${data.server.ms}ms`);
+    const avg = avgOf(onlineDevices.map((d) => d.ms));
+    addLog("sys", "SCAN", `#${pad(cycle, 4)} :: ${up}/${data.devices.length} up · avg ${dash(avg, "ms")} · srv ${data.server.ms}ms`);
 
     setSnap(data);
   }, [addLog, endpoint]);
@@ -338,9 +346,9 @@ export function AdminConsole() {
     const total = devices.length;
     const online = devices.filter((d) => d.online);
     const up = online.length;
-    const avgMs = up ? Math.round(online.reduce((a, d) => a + d.ms, 0) / up) : 0;
-    const avgHealth = up ? Math.round(online.reduce((a, d) => a + d.health, 0) / up) : 0;
-    const usage = total ? Math.round(devices.reduce((a, d) => a + d.usage, 0) / total) : 0;
+    const avgMs = avgOf(online.map((d) => d.ms));
+    const avgHealth = avgOf(online.map((d) => d.health));
+    const usage = avgOf(devices.map((d) => d.usage));
     return { total, up, down: total - up, avgMs, avgHealth, usage };
   }, [devices]);
 
@@ -479,9 +487,9 @@ export function AdminConsole() {
                 { k: "TOTAL", v: agg.total, c: "#bdeed2" },
                 { k: "ONLINE", v: agg.up, c: "#46f08a" },
                 { k: "OFFLINE", v: agg.down, c: "#ff5d6c" },
-                { k: "AVG MS", v: agg.avgMs, c: msColor(agg.avgMs) },
-                { k: "AVG HEALTH", v: `${agg.avgHealth}%`, c: healthColor(agg.avgHealth) },
-                { k: "USAGE", v: `${agg.usage}%`, c: "#5be1ff" },
+                { k: "AVG MS", v: dash(agg.avgMs), c: msColor(agg.avgMs) },
+                { k: "AVG HEALTH", v: dash(agg.avgHealth, "%"), c: healthColor(agg.avgHealth) },
+                { k: "USAGE", v: dash(agg.usage, "%"), c: "#5be1ff" },
               ].map((s) => (
                 <div key={s.k} className="bg-[#02060c] p-3">
                   <div className="text-[10px] tracking-widest text-[#5f9c7e]">{s.k}</div>
@@ -497,20 +505,21 @@ export function AdminConsole() {
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[#bdeed2] hud-glow">{sel.name}</span>
-                    <span className={sel.online ? "text-[#46f08a]" : "text-[#ff5d6c]"}>
-                      ● {sel.online ? "ONLINE" : "OFFLINE"}
+                    <span className={sel.online ? "text-[#46f08a]" : sel.status === "blocked" ? "text-[#f5c452]" : "text-[#ff5d6c]"}>
+                      ● {sel.online ? "ONLINE" : sel.status === "blocked" ? "BLOCKED" : "OFFLINE"}
                     </span>
                   </div>
                   <dl className="space-y-1 text-[11px]">
                     {[
                       ["ID", sel.id],
+                      ["STATUS", sel.status ?? (sel.online ? "active" : "inactive")],
                       ["IP", sel.ip ?? "—"],
                       ["MODEL", sel.model ?? "—"],
                       ["VER", sel.version ?? "—"],
                       ["SITE", sel.location ?? "—"],
-                      ["PING", `${sel.ms} ms`],
-                      ["HEALTH", `${Math.round(sel.health)} %`],
-                      ["USAGE", `${Math.round(sel.usage)} %`],
+                      ["PING", sel.ms == null ? "—" : `${sel.ms} ms`],
+                      ["HEALTH", sel.health == null ? "—" : `${Math.round(sel.health)} %`],
+                      ["USAGE", sel.usage == null ? "—" : `${Math.round(sel.usage)} %`],
                       ["SEEN", relTime(sel.lastSeen, now)],
                     ].map(([k, v]) => (
                       <div key={k} className="flex justify-between gap-2">
@@ -572,25 +581,31 @@ export function AdminConsole() {
                         selected === d.id ? "hud-row-sel" : ""
                       } ${d.online ? "" : "opacity-60"}`}
                     >
-                      <span className={`flex items-center gap-1.5 ${d.online ? "text-[#46f08a]" : "text-[#ff5d6c]"}`}>
+                      <span
+                        className={`flex items-center gap-1.5 ${
+                          d.online ? "text-[#46f08a]" : d.status === "blocked" ? "text-[#f5c452]" : "text-[#ff5d6c]"
+                        }`}
+                      >
                         <CircleDot className={`h-3 w-3 ${d.online ? "hud-pulse" : ""}`} />
-                        {d.online ? "ONLINE" : "OFFLINE"}
+                        {d.online ? "ONLINE" : d.status === "blocked" ? "BLOCKED" : "OFFLINE"}
                       </span>
                       <span className="truncate text-[#7fe6a8]">{d.id}</span>
                       <span className="min-w-0">
                         <span className="block truncate text-[#bdeed2]">{d.name}</span>
                         <span className="block truncate text-[10px] text-[#3a6b54]">{d.location ?? d.ip ?? "—"}</span>
                       </span>
-                      <span className="text-right" style={{ color: d.online ? msColor(d.ms) : "#5f9c7e" }}>
-                        {d.online ? d.ms : "--"}
+                      <span className="text-right" style={{ color: msColor(d.ms) }}>
+                        {d.ms == null ? "—" : d.ms}
                       </span>
                       <span className="flex items-center gap-2">
                         <span className="flex-1">
-                          <Bar value={d.health} color={healthColor(d.health)} />
+                          <Bar value={d.health ?? 0} color={healthColor(d.health)} />
                         </span>
-                        <span className="w-7 text-right text-[10px] text-[#bdeed2]">{Math.round(d.health)}</span>
+                        <span className="w-7 text-right text-[10px] text-[#bdeed2]">
+                          {d.health == null ? "—" : Math.round(d.health)}
+                        </span>
                       </span>
-                      <span className="text-right text-[#5be1ff]">{d.online ? `${Math.round(d.usage)}%` : "--"}</span>
+                      <span className="text-right text-[#5be1ff]">{d.usage == null ? "—" : `${Math.round(d.usage)}%`}</span>
                       <span className="text-right text-[#5f9c7e]">{relTime(d.lastSeen, now)}</span>
                     </button>
                   ))}

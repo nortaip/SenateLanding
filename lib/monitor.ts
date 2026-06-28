@@ -1,10 +1,10 @@
 /**
  * Device-monitoring data layer for the admin console.
  *
- * The real backend lives at BACKEND_URL. Because we cannot guarantee its exact
- * JSON shape, `normalize()` accepts almost anything and maps it onto a stable
- * model. When the backend is unreachable, `buildDemo()` produces a live-looking
- * roster so the console is never blank (clearly flagged as source: "demo").
+ * Real data only — no mock. `normalize()` accepts the backend's JSON (it is
+ * tolerant of field naming) and maps it onto a stable model. Fields the backend
+ * does not provide (ms / health / usage) stay `null` rather than being invented.
+ * When the backend is unreachable, callers use `offlineSnapshot()`.
  */
 
 export const BACKEND_URL = "https://appmobile.svurguns.cyou/Data/MobilePoss/";
@@ -13,9 +13,10 @@ export type Device = {
   id: string;
   name: string;
   online: boolean;
-  ms: number; // latency / ping
-  health: number; // 0-100
-  usage: number; // active usage 0-100
+  status?: string; // raw status (active | inactive | blocked | …)
+  ms: number | null; // latency / ping — null when not reported
+  health: number | null; // 0-100 — null when not reported
+  usage: number | null; // active usage 0-100 — null when not reported
   lastSeen: number; // epoch ms
   ip?: string;
   model?: string;
@@ -130,32 +131,30 @@ function mapDevice(raw: Record<string, unknown>, i: number, now: number): Device
     pick(raw, ["name", "deviceName", "device_name", "model", "device", "title", "label", "hostname"]) ?? id
   );
 
-  const lastSeen = toEpoch(pick(raw, ["lastSeen", "last_seen", "lastseen", "updatedAt", "updated_at", "timestamp", "time", "seenAt", "last_active"]));
+  const lastSeen = toEpoch(pick(raw, ["lastSeen", "last_seen", "lastseen", "updatedAt", "updated_at", "activated_at", "created_at", "timestamp", "time", "seenAt", "last_active"]));
 
+  const statusRaw = pick(raw, ["status", "state"]);
   let online = truthyOnline(pick(raw, ["online", "active", "isOnline", "is_online", "status", "state", "connected", "enabled"]));
   if (online == null) online = lastSeen != null ? now - lastSeen < 120_000 : false;
 
-  const ms = clamp(num(pick(raw, ["ms", "ping", "latency", "responseTime", "response_time", "rtt", "delay"])) ?? (online ? 0 : 0), 0, 9999);
-  const usage = clamp(num(pick(raw, ["usage", "activeUsage", "load", "cpu", "sessions", "active"])) ?? 0, 0, 100);
-
-  let health = num(pick(raw, ["health", "healthScore", "health_score", "score"]));
-  if (health == null) {
-    health = online ? clamp(100 - ms / 4 - usage / 6, 25, 100) : 0;
-  }
-  health = clamp(health, 0, 100);
+  // Only real, reported values — never fabricated.
+  const msRaw = num(pick(raw, ["ms", "ping", "latency", "responseTime", "response_time", "rtt", "delay"]));
+  const usageRaw = num(pick(raw, ["usage", "activeUsage", "active_usage", "load", "sessions"]));
+  const healthRaw = num(pick(raw, ["health", "healthScore", "health_score", "score", "battery"]));
 
   return {
     id,
     name,
     online,
-    ms: online ? ms : 0,
-    health,
-    usage: online ? usage : 0,
-    lastSeen: lastSeen ?? (online ? now : now - 600_000),
+    status: typeof statusRaw === "string" ? statusRaw : undefined,
+    ms: msRaw != null ? clamp(msRaw, 0, 99999) : null,
+    health: healthRaw != null ? clamp(healthRaw, 0, 100) : null,
+    usage: usageRaw != null ? clamp(usageRaw, 0, 100) : null,
+    lastSeen: lastSeen ?? now,
     ip: (pick(raw, ["ip", "ipAddress", "ip_address", "address"]) as string) || undefined,
-    model: (pick(raw, ["model", "deviceModel", "type"]) as string) || undefined,
+    model: (pick(raw, ["model", "deviceModel", "Divace_type", "device_type", "type", "station"]) as string) || undefined,
     version: (pick(raw, ["version", "appVersion", "app_version", "build", "fw"]) as string) || undefined,
-    location: (pick(raw, ["location", "branch", "store", "site", "region"]) as string) || undefined,
+    location: (pick(raw, ["location", "branch", "store", "site", "region", "venue_name", "venue_code", "venue_domain"]) as string) || undefined,
   };
 }
 
