@@ -187,3 +187,43 @@ export function normalize(json: unknown, measuredMs: number): MonitorSnapshot {
 
   return { ok: true, source: "live", ts: now, server, devices };
 }
+
+/* ----------------------------- venues ----------------------------- */
+
+/** Base of the PHP API, derived from BACKEND_URL (…/MobilePoss/ → …/MobilePoss/api/). */
+export const API_BASE = BACKEND_URL.replace(/\/+$/, "") + "/api/";
+
+export type Venue = {
+  id: number | string;
+  name: string;
+  code?: string;
+  domain?: string;
+  status?: string;
+};
+
+/** The console builds these links itself — no manual pasting. */
+export function venuesUrl(base: string = API_BASE): string {
+  return `${base.replace(/\/+$/, "")}/venues.php?no_auth=1&limit=200`;
+}
+export function venueDevicesUrl(venueId: number | string, base: string = API_BASE): string {
+  const b = base.replace(/\/+$/, "");
+  return `${b}/device_activations_view.php?status=all&limit=500&no_auth=1&venue_id=${encodeURIComponent(String(venueId))}`;
+}
+
+export function normalizeVenues(json: unknown): Venue[] {
+  const arr = findDeviceArray(json);
+  return arr.map((v, i) => {
+    const id = (num(pick(v, ["id", "venue_id"])) ?? i + 1) as number;
+    const code = (pick(v, ["code"]) as string) || undefined;
+    const domain = (pick(v, ["domain"]) as string) || undefined;
+    const nameRaw = pick(v, ["name", "venue_name", "title"]);
+    const name = (typeof nameRaw === "string" && nameRaw.trim()) || code || domain || `Venue #${id}`;
+    return {
+      id,
+      name,
+      code,
+      domain,
+      status: (pick(v, ["status"]) as string) || undefined,
+    };
+  });
+}

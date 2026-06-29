@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Terminal,
-  Server,
-  Cpu,
   Radio,
   Activity,
   Boxes,
@@ -13,64 +11,50 @@ import {
   Crosshair,
   Settings2,
   Check,
+  Building2,
+  RefreshCw,
 } from "lucide-react";
 import {
   normalize,
   offlineSnapshot,
-  BACKEND_URL,
+  normalizeVenues,
+  venuesUrl,
+  venueDevicesUrl,
+  API_BASE,
   type Device,
   type MonitorSnapshot,
+  type Venue,
 } from "@/lib/monitor";
 
 const POLL_MS = 4000;
 const LOG_CAP = 220;
 const HIST_CAP = 48;
-const ENDPOINT_KEY = "monitor-endpoint";
+const BASE_KEY = "monitor-api-base";
 
 type Transport = "direct" | "proxy" | "offline";
 
-/**
- * Real data only — no mock. Tries the most capable path first:
- *  1. direct browser fetch  (bypasses the server egress firewall; needs CORS)
- *  2. server proxy /api/monitor  (works where the server itself has egress)
- * If neither yields live data, returns an honest OFFLINE snapshot (empty fleet).
- */
-async function loadSnapshot(
-  endpoint: string
-): Promise<{ snap: MonitorSnapshot; transport: Transport }> {
-  let lastErr = "no response";
-
-  // 1) direct from the browser
+/** Fetch JSON: browser-direct first (needs CORS), then the raw server proxy. */
+async function fetchJson(url: string): Promise<{ json: unknown; transport: Transport; ms: number }> {
   try {
     const t0 = performance.now();
-    const res = await fetch(endpoint, {
+    const res = await fetch(url, {
       cache: "no-store",
       headers: { accept: "application/json, text/plain, */*" },
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = JSON.parse(await res.text());
-    const snap = normalize(json, Math.round(performance.now() - t0));
-    if (snap.devices.length) return { snap, transport: "direct" };
-    lastErr = "payload had no devices";
-  } catch (e) {
-    lastErr = (e as Error).message || "direct fetch blocked (CORS?)";
-  }
-
-  // 2) server proxy
-  try {
-    const res = await fetch(`/api/monitor?url=${encodeURIComponent(endpoint)}`, {
-      cache: "no-store",
-    });
-    const snap: MonitorSnapshot = await res.json();
-    if (snap.source === "live" && snap.devices.length) {
-      return { snap, transport: "proxy" };
+    if (res.ok) {
+      const json = JSON.parse(await res.text());
+      return { json, transport: "direct", ms: Math.round(performance.now() - t0) };
     }
-    lastErr = snap.note || lastErr;
-  } catch (e) {
-    lastErr = (e as Error).message || lastErr;
+  } catch {
+    /* CORS / network — fall through to proxy */
   }
-
-  return { snap: offlineSnapshot(lastErr), transport: "offline" };
+  const t1 = performance.now();
+  const res = await fetch(`/api/monitor?raw=1&url=${encodeURIComponent(url)}`, { cache: "no-store" });
+  const json = (await res.json()) as { __proxy_error?: string };
+  if (!res.ok || json?.__proxy_error) {
+    throw new Error(json?.__proxy_error || `proxy HTTP ${res.status}`);
+  }
+  return { json, transport: "proxy", ms: Math.round(performance.now() - t1) };
 }
 
 type Level = "ok" | "info" | "warn" | "err" | "sys";
@@ -87,23 +71,16 @@ const LEVEL_COLOR: Record<Level, string> = {
 /* ----------------------------- utils ----------------------------- */
 
 const pad = (n: number, w = 2) => String(n).padStart(w, "0");
-
-function clockStr(ms: number) {
+const clockStr = (ms: number) => {
   const d = new Date(ms);
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
+};
 function relTime(ts: number, now: number) {
   const s = Math.max(0, Math.floor((now - ts) / 1000));
   if (s < 2) return "now";
   if (s < 60) return `${s}s`;
   if (s < 3600) return `${Math.floor(s / 60)}m`;
   return `${Math.floor(s / 3600)}h`;
-}
-function fmtUptime(sec: number) {
-  const d = Math.floor(sec / 86400);
-  const h = Math.floor((sec % 86400) / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  return `${d}d ${pad(h)}h ${pad(m)}m`;
 }
 function msColor(ms: number | null) {
   if (ms == null) return "#5f9c7e";
@@ -176,11 +153,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   const min = Math.min(...data, 0);
   const span = Math.max(1, max - min);
   const step = w / (data.length - 1);
-  const pts = data.map((v, i) => {
-    const x = i * step;
-    const y = h - 4 - ((v - min) / span) * (h - 8);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
+  const pts = data.map((v, i) => `${(i * step).toFixed(1)},${(h - 4 - ((v - min) / span) * (h - 8)).toFixed(1)}`);
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-10 w-full" preserveAspectRatio="none">
       <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5" />
@@ -192,16 +165,23 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 const ROW_GRID =
   "grid grid-cols-[92px_104px_minmax(150px,1fr)_70px_128px_60px_64px] gap-2 items-center";
 
+const venueLabel = (v: Venue) => v.name || v.code || v.domain || `Venue #${v.id}`;
+
 /* ----------------------------- main ----------------------------- */
 
 export function AdminConsole() {
+  const [apiBase, setApiBase] = useState<string>(API_BASE);
+  const [draftBase, setDraftBase] = useState<string>(API_BASE);
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [venuesErr, setVenuesErr] = useState<string | null>(null);
+  const [venuesLoading, setVenuesLoading] = useState(false);
+  const [selectedVenueId, setSelectedVenueId] = useState<number | string | null>(null);
+
   const [snap, setSnap] = useState<MonitorSnapshot | null>(null);
   const [logs, setLogs] = useState<LogLine[]>([]);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [now, setNow] = useState<number>(() => 0);
   const [transport, setTransport] = useState<Transport>("offline");
-  const [endpoint, setEndpoint] = useState<string>(BACKEND_URL);
-  const [draft, setDraft] = useState<string>(BACKEND_URL);
   const [showCfg, setShowCfg] = useState(false);
 
   const mountRef = useRef<number>(0);
@@ -228,84 +208,97 @@ export function AdminConsole() {
     linkUpRef.current = null;
   }, []);
 
-  const poll = useCallback(async () => {
-    const { snap: data, transport: tr } = await loadSnapshot(endpoint);
-    setTransport(tr);
+  /* ---- venues ---- */
+  const loadVenues = useCallback(async () => {
+    setVenuesLoading(true);
+    try {
+      const { json } = await fetchJson(venuesUrl(apiBase));
+      const vs = normalizeVenues(json);
+      setVenues(vs);
+      setVenuesErr(null);
+      addLog("sys", "VENUES", `${vs.length} venues loaded`);
+      setSelectedVenueId((prev) => {
+        if (prev != null) return prev;
+        const first = vs[0]?.id ?? null;
+        if (first != null) addLog("ok", "SELECT", `AUTO-SELECT venue :: ${venueLabel(vs[0])}`);
+        return first;
+      });
+    } catch (e) {
+      setVenues([]);
+      setVenuesErr((e as Error).message);
+      addLog("err", "VENUES", `load failed :: ${(e as Error).message}`);
+    } finally {
+      setVenuesLoading(false);
+    }
+  }, [apiBase, addLog]);
 
-    const live = data.source === "live" && data.ok;
-    if (!live) {
+  const selectVenue = (v: Venue) => {
+    if (v.id === selectedVenueId) return;
+    resetStream();
+    setSnap(null);
+    setSelectedDevice(null);
+    setSelectedVenueId(v.id);
+    addLog("sys", "VENUE", `OPEN ${venueLabel(v)} (#${v.id}) — building device link`);
+  };
+
+  /* ---- devices for selected venue ---- */
+  const deviceUrl = selectedVenueId != null ? venueDevicesUrl(selectedVenueId, apiBase) : null;
+
+  const poll = useCallback(async () => {
+    if (!deviceUrl) return;
+    try {
+      const { json, transport: tr, ms } = await fetchJson(deviceUrl);
+      const data = normalize(json, ms);
+      setTransport(tr);
+
+      const cycle = ++cycleRef.current;
+      if (linkUpRef.current !== true) {
+        linkUpRef.current = true;
+        addLog("ok", "UPLINK", `LINK UP // ${tr.toUpperCase()} · ${data.devices.length} nodes`);
+      }
+
+      if (firstRef.current) {
+        firstRef.current = false;
+        addLog("sys", "ROSTER", `${data.devices.length} devices in venue`);
+        for (const d of data.devices) {
+          prevOnline.current.set(d.id, d.online);
+          addLog(d.online ? "ok" : "err", "REGISTER", `${d.id} ${d.name} [${(d.status ?? (d.online ? "active" : "inactive")).toUpperCase()}]`);
+        }
+      } else {
+        for (const d of data.devices) {
+          const prev = prevOnline.current.get(d.id);
+          if (prev === undefined) {
+            addLog("info", "JOIN", `${d.id} ${d.name} appeared`);
+          } else if (prev !== d.online) {
+            if (d.online) addLog("ok", "OPEN", `DEVICE OPENED :: ${d.name} (${d.id}) @ ${d.location ?? "—"}`);
+            else addLog("err", "LOST", `DEVICE LOST :: ${d.name} (${d.id}) status=${d.status ?? "inactive"}`);
+          }
+          prevOnline.current.set(d.id, d.online);
+        }
+      }
+
+      for (const d of data.devices) {
+        if (d.ms == null) continue;
+        const arr = histRef.current.get(d.id) ?? [];
+        arr.push(d.ms);
+        if (arr.length > HIST_CAP) arr.shift();
+        histRef.current.set(d.id, arr);
+      }
+
+      const onlineDevices = data.devices.filter((d) => d.online);
+      const avg = avgOf(onlineDevices.map((d) => d.ms));
+      addLog("sys", "SCAN", `#${pad(cycle, 4)} :: ${onlineDevices.length}/${data.devices.length} active · avg ${dash(avg, "ms")}`);
+
+      setSnap(data);
+    } catch (e) {
+      setTransport("offline");
       if (linkUpRef.current !== false) {
         linkUpRef.current = false;
-        addLog("err", "UPLINK", `LINK DOWN :: ${data.note ?? "no response"}`);
+        addLog("err", "UPLINK", `LINK DOWN :: ${(e as Error).message}`);
       }
-      setSnap(data);
-      return;
+      setSnap(offlineSnapshot((e as Error).message));
     }
-
-    const cycle = ++cycleRef.current;
-    if (linkUpRef.current !== true) {
-      linkUpRef.current = true;
-      addLog("ok", "UPLINK", `LINK UP // ${tr.toUpperCase()} · src=LIVE`);
-    }
-
-    if (firstRef.current) {
-      firstRef.current = false;
-      addLog("sys", "ROSTER", `${data.devices.length} nodes acquired`);
-      for (const d of data.devices) {
-        prevOnline.current.set(d.id, d.online);
-        addLog(d.online ? "ok" : "err", "REGISTER", `${d.id} ${d.name} [${d.online ? "ONLINE" : "OFFLINE"}]`);
-      }
-    } else {
-      for (const d of data.devices) {
-        const prev = prevOnline.current.get(d.id);
-        if (prev === undefined) {
-          addLog("info", "JOIN", `${d.id} ${d.name} appeared`);
-        } else if (prev !== d.online) {
-          if (d.online) {
-            addLog("ok", "OPEN", `DEVICE OPENED :: ${d.name} (${d.id}) ${d.ms}ms @ ${d.location ?? "—"}`);
-          } else {
-            addLog("err", "LOST", `DEVICE LOST :: ${d.name} (${d.id}) last_seen=${relTime(d.lastSeen, Date.now())}`);
-          }
-        }
-        prevOnline.current.set(d.id, d.online);
-      }
-    }
-
-    for (const d of data.devices) {
-      if (d.ms == null) continue; // only trace real latency samples
-      const arr = histRef.current.get(d.id) ?? [];
-      arr.push(d.ms);
-      if (arr.length > HIST_CAP) arr.shift();
-      histRef.current.set(d.id, arr);
-    }
-
-    const onlineDevices = data.devices.filter((d) => d.online);
-    if (onlineDevices.length) {
-      for (let k = 0; k < 2; k++) {
-        const d = onlineDevices[(cycle * 2 + k) % onlineDevices.length];
-        addLog("info", "PROBE", `HEALTHCHECK ${d.id} ok ms=${dash(d.ms)} health=${dash(d.health, "%")}`);
-      }
-    }
-
-    const up = onlineDevices.length;
-    const avg = avgOf(onlineDevices.map((d) => d.ms));
-    addLog("sys", "SCAN", `#${pad(cycle, 4)} :: ${up}/${data.devices.length} up · avg ${dash(avg, "ms")} · srv ${data.server.ms}ms`);
-
-    setSnap(data);
-  }, [addLog, endpoint]);
-
-  // load saved endpoint
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(ENDPOINT_KEY);
-      if (saved) {
-        setEndpoint(saved);
-        setDraft(saved);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  }, [deviceUrl, addLog]);
 
   // clock
   useEffect(() => {
@@ -315,25 +308,46 @@ export function AdminConsole() {
     return () => clearInterval(id);
   }, []);
 
-  // polling (re-arms when endpoint changes)
+  // load saved base + venues
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(BASE_KEY);
+      if (saved) {
+        setApiBase(saved);
+        setDraftBase(saved);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    loadVenues();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiBase]);
+
+  // poll devices when a venue is selected
+  useEffect(() => {
+    if (!deviceUrl) return;
     poll();
     const id = setInterval(poll, POLL_MS);
     return () => clearInterval(id);
-  }, [poll]);
+  }, [poll, deviceUrl]);
 
-  const saveEndpoint = () => {
-    const next = draft.trim();
+  const saveBase = () => {
+    const next = draftBase.trim();
     if (!next) return;
     try {
-      localStorage.setItem(ENDPOINT_KEY, next);
+      localStorage.setItem(BASE_KEY, next);
     } catch {
       /* ignore */
     }
     resetStream();
     setSnap(null);
-    addLog("sys", "CONFIG", `ENDPOINT SET :: ${next}`);
-    setEndpoint(next);
+    setVenues([]);
+    setSelectedVenueId(null);
+    addLog("sys", "CONFIG", `API BASE :: ${next}`);
+    setApiBase(next);
     setShowCfg(false);
   };
 
@@ -345,21 +359,28 @@ export function AdminConsole() {
   const agg = useMemo(() => {
     const total = devices.length;
     const online = devices.filter((d) => d.online);
-    const up = online.length;
-    const avgMs = avgOf(online.map((d) => d.ms));
-    const avgHealth = avgOf(online.map((d) => d.health));
-    const usage = avgOf(devices.map((d) => d.usage));
-    return { total, up, down: total - up, avgMs, avgHealth, usage };
+    return {
+      total,
+      up: online.length,
+      down: total - online.length,
+      blocked: devices.filter((d) => d.status === "blocked").length,
+      avgMs: avgOf(online.map((d) => d.ms)),
+      avgHealth: avgOf(online.map((d) => d.health)),
+      usage: avgOf(devices.map((d) => d.usage)),
+    };
   }, [devices]);
 
-  const sel = selected ? devices.find((d) => d.id === selected) ?? null : null;
+  const selectedVenue = venues.find((v) => v.id === selectedVenueId) ?? null;
+  const sel = selectedDevice ? devices.find((d) => d.id === selectedDevice) ?? null : null;
   const sessionUp = now && mountRef.current ? Math.floor((now - mountRef.current) / 1000) : 0;
-  const connecting = snap === null;
-  const live = !!snap && snap.source === "live" && snap.ok;
-  const offline = !connecting && !live;
 
-  const onSelect = (d: Device) => {
-    setSelected(d.id);
+  const noVenue = selectedVenueId == null;
+  const connecting = !noVenue && snap === null;
+  const live = !!snap && snap.source === "live" && snap.ok;
+  const offline = !noVenue && !connecting && !live;
+
+  const onSelectDevice = (d: Device) => {
+    setSelectedDevice(d.id);
     addLog("sys", "TARGET", `OPEN ${d.id} :: inspecting ${d.name}`);
   };
 
@@ -376,8 +397,6 @@ export function AdminConsole() {
           right={
             <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] tracking-widest text-[#7fe6a8]">
               <span>NET {live ? snap.server.ms : "--"}ms</span>
-              <span>CPU {live ? Math.round(snap.server.cpu) : "--"}%</span>
-              <span>RAM {live ? Math.round(snap.server.ram) : "--"}%</span>
               <span>{now ? clockStr(now) : "--:--:--"}</span>
               <span
                 className={`rounded-sm px-1.5 py-0.5 ${
@@ -388,11 +407,11 @@ export function AdminConsole() {
                       : "bg-[#ff5d6c]/15 text-[#ff5d6c]"
                 }`}
               >
-                ● {live ? `LIVE·${transport.toUpperCase()}` : connecting ? "CONNECTING" : "OFFLINE"}
+                ● {live ? `LIVE·${transport.toUpperCase()}` : connecting ? "CONNECTING" : noVenue ? "IDLE" : "OFFLINE"}
               </span>
               <button
                 onClick={() => setShowCfg((v) => !v)}
-                aria-label="Configure endpoint"
+                aria-label="Configure API base"
                 className="text-[#7fe6a8] transition-colors hover:text-[#46f08a]"
               >
                 <Settings2 className="h-3.5 w-3.5" />
@@ -402,93 +421,112 @@ export function AdminConsole() {
         >
           <div className="flex items-center justify-between px-3 py-2 text-[11px]">
             <span className="text-[#5f9c7e]">
-              DEVICE-CTRL-SYS <span className="text-[#7fe6a8]">v4.5.5</span> · MOBILE-POSS UPLINK
+              DEVICE-CTRL-SYS <span className="text-[#7fe6a8]">v4.5.5</span> ·{" "}
+              {selectedVenue ? (
+                <>VENUE <span className="text-[#bdeed2]">{venueLabel(selectedVenue)}</span></>
+              ) : (
+                "SELECT A VENUE"
+              )}
             </span>
             <span className="text-[#5f9c7e]">
-              SESSION <span className="text-[#bdeed2]">{fmtUptime(sessionUp)}</span>
+              SESSION <span className="text-[#bdeed2]">{pad(Math.floor(sessionUp / 60))}:{pad(sessionUp % 60)}</span>
               <span className="hud-blink ml-2 text-[#46f08a]">█</span>
             </span>
           </div>
           {showCfg && (
             <div className="flex flex-col gap-2 border-t border-[#46f08a]/15 px-3 py-2 sm:flex-row sm:items-center">
-              <span className="shrink-0 text-[10px] tracking-widest text-[#5f9c7e]">DATA ENDPOINT</span>
+              <span className="shrink-0 text-[10px] tracking-widest text-[#5f9c7e]">API BASE</span>
               <input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && saveEndpoint()}
+                value={draftBase}
+                onChange={(e) => setDraftBase(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && saveBase()}
                 spellCheck={false}
                 className="min-w-0 flex-1 rounded-sm border border-[#46f08a]/25 bg-[#02060c] px-2 py-1 text-[11px] text-[#bdeed2] outline-none focus:border-[#46f08a]/60"
-                placeholder="https://appmobile.svurguns.cyou/Data/MobilePoss/…"
+                placeholder="https://appmobile.svurguns.cyou/Data/MobilePoss/api/"
               />
               <button
-                onClick={saveEndpoint}
+                onClick={saveBase}
                 className="flex items-center justify-center gap-1.5 rounded-sm border border-[#46f08a]/40 bg-[#46f08a]/10 px-3 py-1 text-[11px] font-semibold text-[#46f08a] hover:bg-[#46f08a]/20"
               >
-                <Check className="h-3.5 w-3.5" /> CONNECT
+                <Check className="h-3.5 w-3.5" /> APPLY
               </button>
             </div>
           )}
         </Panel>
 
-        {/* ---- Offline / connecting banner ---- */}
+        {/* ---- banners ---- */}
         {offline && (
           <div className="hud-panel border-[#ff5d6c]/40 px-3 py-2 text-[11px] text-[#ff5d6c]">
-            ⚠ LINK DOWN — no live data. {snap?.note}
-            <span className="text-[#7a4b52]">
-              {" "}
-              · endpoint: {endpoint} · enable CORS on the PHP (Access-Control-Allow-Origin) or set the
-              exact JSON endpoint via ⚙.
-            </span>
+            ⚠ LINK DOWN — {snap?.note}
+            <span className="text-[#7a4b52]"> · enable CORS on the PHP (Access-Control-Allow-Origin) for your site origin, or the server proxy must reach the host.</span>
           </div>
         )}
         {connecting && (
           <div className="hud-panel border-[#5be1ff]/30 px-3 py-2 text-[11px] text-[#5be1ff]">
-            ◌ CONNECTING to {endpoint} …
+            ◌ CONNECTING to venue #{selectedVenueId} …
           </div>
         )}
 
         {/* ---- Main grid ---- */}
-        <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)_360px]">
+        <div className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)_340px]">
           {/* LEFT */}
           <div className="space-y-3">
-            <Panel title="BACK-END SYS" icon={<Server className="h-3.5 w-3.5" />} bodyClass="space-y-3 p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[#5f9c7e]">STATUS</span>
-                <span className={live && snap.server.online ? "text-[#46f08a]" : "text-[#ff5d6c]"}>
-                  ● {live && snap.server.online ? "OPERATIONAL" : "DOWN"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[#5f9c7e]">PING</span>
-                <span style={{ color: msColor(live ? snap.server.ms : 999) }}>{live ? snap.server.ms : "--"} ms</span>
-              </div>
-              <div>
-                <div className="mb-1 flex justify-between text-[10px] text-[#5f9c7e]">
-                  <span>CPU</span>
-                  <span className="text-[#bdeed2]">{live ? Math.round(snap.server.cpu) : "--"}%</span>
+            <Panel
+              title="VENUES"
+              icon={<Building2 className="h-3.5 w-3.5" />}
+              right={
+                <button
+                  onClick={loadVenues}
+                  aria-label="Reload venues"
+                  className="flex items-center gap-1 text-[10px] text-[#5f9c7e] transition-colors hover:text-[#46f08a]"
+                >
+                  <RefreshCw className={`h-3 w-3 ${venuesLoading ? "hud-pulse" : ""}`} /> {venues.length}
+                </button>
+              }
+              bodyClass="hud-scroll max-h-[260px] overflow-y-auto"
+            >
+              {venuesErr && <div className="px-3 py-4 text-[11px] text-[#ff5d6c]">⚠ {venuesErr}</div>}
+              {!venuesErr && venues.length === 0 && (
+                <div className="px-3 py-6 text-center text-[11px] text-[#5f9c7e]">
+                  {venuesLoading ? <span className="hud-pulse">◌ LOADING VENUES…</span> : "no venues"}
                 </div>
-                <Bar value={live ? snap.server.cpu : 0} color={healthColor(100 - (live ? snap.server.cpu : 100))} />
-              </div>
-              <div>
-                <div className="mb-1 flex justify-between text-[10px] text-[#5f9c7e]">
-                  <span>RAM</span>
-                  <span className="text-[#bdeed2]">{live ? Math.round(snap.server.ram) : "--"}%</span>
-                </div>
-                <Bar value={live ? snap.server.ram : 0} color={healthColor(100 - (live ? snap.server.ram : 100))} />
-              </div>
-              <div className="flex items-center justify-between border-t border-[#46f08a]/15 pt-2 text-[10px]">
-                <span className="text-[#5f9c7e]">UPTIME</span>
-                <span className="text-[#bdeed2]">{live ? fmtUptime(snap.server.uptimeSec) : "--"}</span>
-              </div>
+              )}
+              {venues.map((v) => {
+                const active = v.id === selectedVenueId;
+                const c = v.status === "blocked" ? "#f5c452" : v.status === "inactive" ? "#5f9c7e" : "#46f08a";
+                return (
+                  <button
+                    key={String(v.id)}
+                    onClick={() => selectVenue(v)}
+                    className={`hud-row flex w-full items-center gap-2.5 border-b border-[#0f2a1e] px-3 py-2 text-left ${
+                      active ? "hud-row-sel" : ""
+                    }`}
+                  >
+                    <CircleDot className="h-3 w-3 shrink-0" style={{ color: c }} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[#bdeed2]">{venueLabel(v)}</span>
+                      <span className="block truncate text-[10px] text-[#3a6b54]">
+                        #{v.id}
+                        {v.code ? ` · ${v.code}` : ""}
+                        {v.domain ? ` · ${v.domain}` : ""}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
             </Panel>
 
-            <Panel title="FLEET SUMMARY" icon={<Activity className="h-3.5 w-3.5" />} bodyClass="grid grid-cols-2 gap-px bg-[#46f08a]/10">
+            <Panel
+              title="FLEET SUMMARY"
+              icon={<Activity className="h-3.5 w-3.5" />}
+              bodyClass="grid grid-cols-2 gap-px bg-[#46f08a]/10"
+            >
               {[
                 { k: "TOTAL", v: agg.total, c: "#bdeed2" },
-                { k: "ONLINE", v: agg.up, c: "#46f08a" },
-                { k: "OFFLINE", v: agg.down, c: "#ff5d6c" },
+                { k: "ACTIVE", v: agg.up, c: "#46f08a" },
+                { k: "INACTIVE", v: agg.down - agg.blocked, c: "#ff5d6c" },
+                { k: "BLOCKED", v: agg.blocked, c: "#f5c452" },
                 { k: "AVG MS", v: dash(agg.avgMs), c: msColor(agg.avgMs) },
-                { k: "AVG HEALTH", v: dash(agg.avgHealth, "%"), c: healthColor(agg.avgHealth) },
                 { k: "USAGE", v: dash(agg.usage, "%"), c: "#5be1ff" },
               ].map((s) => (
                 <div key={s.k} className="bg-[#02060c] p-3">
@@ -547,8 +585,8 @@ export function AdminConsole() {
             title="DEVICE MATRIX"
             icon={<Boxes className="h-3.5 w-3.5" />}
             right={
-              <span className="text-[10px] text-[#5f9c7e]">
-                <span className="text-[#46f08a]">{agg.up}</span>/{agg.total} ACTIVE
+              <span className="truncate text-[10px] text-[#5f9c7e]">
+                {selectedVenue ? venueLabel(selectedVenue) : "—"} · <span className="text-[#46f08a]">{agg.up}</span>/{agg.total}
               </span>
             }
           >
@@ -566,19 +604,23 @@ export function AdminConsole() {
                 <div className="hud-scroll max-h-[58vh] overflow-y-auto">
                   {devices.length === 0 && (
                     <div className="px-3 py-10 text-center text-[#5f9c7e]">
-                      {connecting ? (
+                      {noVenue ? (
+                        "← SELECT A VENUE"
+                      ) : connecting ? (
                         <span className="hud-pulse">◌ ACQUIRING NODES…</span>
-                      ) : (
+                      ) : offline ? (
                         <span className="text-[#ff5d6c]">⚠ NO DATA · LINK DOWN</span>
+                      ) : (
+                        "no devices in this venue"
                       )}
                     </div>
                   )}
                   {devices.map((d) => (
                     <button
                       key={d.id}
-                      onClick={() => onSelect(d)}
+                      onClick={() => onSelectDevice(d)}
                       className={`${ROW_GRID} hud-row w-full border-b border-[#0f2a1e] px-3 py-2 text-left ${
-                        selected === d.id ? "hud-row-sel" : ""
+                        selectedDevice === d.id ? "hud-row-sel" : ""
                       } ${d.online ? "" : "opacity-60"}`}
                     >
                       <span
@@ -592,7 +634,7 @@ export function AdminConsole() {
                       <span className="truncate text-[#7fe6a8]">{d.id}</span>
                       <span className="min-w-0">
                         <span className="block truncate text-[#bdeed2]">{d.name}</span>
-                        <span className="block truncate text-[10px] text-[#3a6b54]">{d.location ?? d.ip ?? "—"}</span>
+                        <span className="block truncate text-[10px] text-[#3a6b54]">{d.location ?? d.ip ?? d.model ?? "—"}</span>
                       </span>
                       <span className="text-right" style={{ color: msColor(d.ms) }}>
                         {d.ms == null ? "—" : d.ms}
@@ -643,10 +685,7 @@ export function AdminConsole() {
 
         {/* ---- Footer ---- */}
         <div className="hud-panel flex items-center justify-between px-3 py-1.5 text-[10px] tracking-widest text-[#5f9c7e]">
-          <span className="flex items-center gap-2">
-            <Cpu className="h-3 w-3" />
-            LINK {live ? `SECURE·${transport.toUpperCase()}` : "DOWN"} · POLL {POLL_MS / 1000}s · NODES {agg.total}
-          </span>
+          <span>LINK {live ? `SECURE·${transport.toUpperCase()}` : "DOWN"} · POLL {POLL_MS / 1000}s · NODES {agg.total}</span>
           <span>MON · SECTOR-4 · SENATE GROUP</span>
         </div>
       </div>
