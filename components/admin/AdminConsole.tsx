@@ -25,6 +25,7 @@ import {
   type MonitorSnapshot,
   type Venue,
 } from "@/lib/monitor";
+import { VenueOpsPanel } from "@/components/admin/VenueOpsPanel";
 
 const POLL_MS = 4000;
 const LOG_CAP = 220;
@@ -682,6 +683,11 @@ export function AdminConsole() {
             </div>
           </Panel>
         </div>
+
+        {/* ---- Backend Operations (per-venue drill-down) ---- */}
+        {selectedVenue && (
+          <VenueOpsPanel venue={selectedVenue} />
+        )}
 
         {/* ---- Footer ---- */}
         <div className="hud-panel flex items-center justify-between px-3 py-1.5 text-[10px] tracking-widest text-[#5f9c7e]">
