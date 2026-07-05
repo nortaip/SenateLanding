@@ -6,6 +6,16 @@ import { Reveal } from "./ui/Reveal";
 import { Quote, Star } from "lucide-react";
 import { useI18n } from "./i18n/LanguageProvider";
 
+/** Initials from a restaurant name, e.g. "Cedar & Sage Group" → "CS". */
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter((w) => /[a-zA-Z0-9]/.test(w[0] ?? ""))
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+}
+
 export function Testimonials() {
   const { t } = useI18n();
   return (
@@ -26,7 +36,7 @@ export function Testimonials() {
           {testimonialMeta.map((meta, i) => {
             const item = t.testimonials.items[i];
             return (
-              <Reveal as="article" key={meta.name} delay={i % 3} className="break-inside-avoid">
+              <Reveal as="article" key={meta.company} delay={i % 3} className="break-inside-avoid">
                 <div className="glass relative rounded-2xl p-6">
                   <Quote className="h-7 w-7 text-gold-500/30" />
                   <div className="mt-3 flex gap-0.5">
@@ -39,13 +49,11 @@ export function Testimonials() {
                   </p>
                   <div className="mt-5 flex items-center gap-3">
                     <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-gold-300 to-gold-600 text-sm font-bold text-ink-900">
-                      {meta.initials}
+                      {initials(meta.company)}
                     </span>
                     <div>
-                      <div className="text-sm font-semibold text-mist-100">{meta.name}</div>
-                      <div className="text-xs text-mist-400">
-                        {item.role} · {meta.company}
-                      </div>
+                      <div className="text-sm font-semibold text-mist-100">{meta.company}</div>
+                      <div className="text-xs text-mist-400">{item.role}</div>
                     </div>
                   </div>
                 </div>
