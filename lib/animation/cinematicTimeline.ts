@@ -1,164 +1,168 @@
 import { gsap } from "gsap";
-import { cinematicConfig, type QualityLevel } from "@/config/cinematicConfig";
-import type { Object3D } from "three";
+import { cinematicConfig } from "@/config/cinematicConfig";
 
 /**
- * Mutable state shared between the GSAP timeline, the R3F render loop and the DOM.
- * It is written by GSAP and read every frame, so scrolling never triggers React renders.
+ * Mutable state written by the timeline and read every frame by the handoff ticker,
+ * so scrolling never triggers React renders.
  */
 export interface CinematicState {
-  /** Scroll-scrubbed timeline progress, 0..1. Drives the camera and lights. */
+  /** Scroll-scrubbed timeline progress, 0..1. */
   progress: number;
-  /** Autoplay intro multiplier, 0..1. Runs once on load, then stays at 1. */
-  intro: number;
-  /** Front door opening, 0 (closed) .. 1 (open). Scrubbed by the timeline. */
-  doorOpen: number;
-  /** Screen-to-interface handoff, 0..1. */
+  /** Interface handoff from the POS screen to the final rectangle, 0..1. */
   morph: number;
-  /** True once the handoff overlay has taken over from the 3D screen. */
-  handoffActive: boolean;
-  quality: QualityLevel;
-  /** Set by POSTerminal; the POS screen mesh the camera is heading for. */
-  screenMesh: Object3D | null;
-  /** Set by CinematicOpening; the DOM element that carries the Senate POS interface. */
-  handoffEl: HTMLDivElement | null;
 }
 
-export function createCinematicState(quality: QualityLevel): CinematicState {
-  return {
-    progress: 0,
-    intro: 0,
-    doorOpen: 0,
-    morph: 0,
-    handoffActive: false,
-    quality,
-    screenMesh: null,
-    handoffEl: null,
-  };
-}
-
-const smoothstep = (edge0: number, edge1: number, x: number) => {
-  const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1);
-  return t * t * (3 - 2 * t);
-};
-
-/** Light level for a given progress and intro value. Pure, so it is easy to reason about. */
-export function lightLevelFor(progress: number, intro: number): number {
-  const { dimLevel, onStart, onEnd } = cinematicConfig.lighting;
-  const on = dimLevel + (1 - dimLevel) * smoothstep(onStart, onEnd, progress);
-  return on * intro;
+export function createCinematicState(): CinematicState {
+  return { progress: 0, morph: 0 };
 }
 
 export interface TimelineRefs {
-  /** Photographic entrance plate (whole layer), its zoom wrapper, image and light bloom. */
   entrance: HTMLElement | null;
   entranceZoom: HTMLElement | null;
   entranceImage: HTMLElement | null;
   entranceBloom: HTMLElement | null;
-  canvas: HTMLElement | null;
+  interior: HTMLElement | null;
+  interiorDrift: HTMLElement | null;
+  interiorZoom: HTMLElement | null;
+  interiorImage: HTMLElement | null;
+  screenGlow: HTMLElement | null;
+  /** POS screen corners in the photo: TL, TR, BR, BL. */
+  screenMarkers: (HTMLElement | null)[];
+  handoff: HTMLElement | null;
   scrim: HTMLElement | null;
   hint: HTMLElement | null;
+  railFill: HTMLElement | null;
   headlines: (HTMLElement | null)[];
   hero: (HTMLElement | null)[];
-  handoff: HTMLElement | null;
+}
+
+export function createTimelineRefs(): TimelineRefs {
+  return {
+    entrance: null,
+    entranceZoom: null,
+    entranceImage: null,
+    entranceBloom: null,
+    interior: null,
+    interiorDrift: null,
+    interiorZoom: null,
+    interiorImage: null,
+    screenGlow: null,
+    screenMarkers: [null, null, null, null],
+    handoff: null,
+    scrim: null,
+    hint: null,
+    railFill: null,
+    headlines: cinematicConfig.copy.phases.map(() => null),
+    hero: [null, null, null, null],
+  };
 }
 
 /**
- * One timeline spanning 0..1, scrubbed by ScrollTrigger.
- * Every visual change (camera, text, handoff) is a function of this single timeline,
- * so scrolling forward and backward always reproduces the same frame for a given position.
+ * One timeline spanning 0..1, scrubbed by ScrollTrigger. Every visual change is a function of
+ * this single timeline, so scrolling backwards reproduces exactly the same frames.
  */
-export function buildCinematicTimeline(
-  state: CinematicState,
-  refs: TimelineRefs,
-): gsap.core.Timeline {
-  const { copy, timing } = cinematicConfig;
+export function buildCinematicTimeline(state: CinematicState, refs: TimelineRefs): gsap.core.Timeline {
+  const { copy, timing, entrance, interior, handoff } = cinematicConfig;
   const tl = gsap.timeline({ paused: true, defaults: { ease: "none" } });
+  const at = <T,>(el: T | null, fn: (el: T) => void) => {
+    if (el) fn(el);
+  };
 
-  // Camera and lights follow the raw progress value.
   tl.to(state, { progress: 1, duration: 1 }, 0);
 
-  // Entrance: walk into the open doorway, light floods in, then the plate dissolves into the
-  // 3D room, where the camera stands on the threshold at that moment.
-  const { entrance } = cinematicConfig;
-  if (refs.entranceZoom) {
+  // 1. Entrance: walk into the open doorway, warm light floods in, the plate dissolves.
+  at(refs.entranceZoom, (el) =>
+    tl.fromTo(el, { scale: 1 }, { scale: entrance.zoom, duration: entrance.walkEnd, ease: "power2.in" }, 0),
+  );
+  at(refs.entranceImage, (el) =>
     tl.fromTo(
-      refs.entranceZoom,
-      { scale: 1 },
-      { scale: entrance.zoom, duration: entrance.walkEnd, ease: "power2.in" },
-      0,
-    );
-  }
-  if (refs.entranceImage) {
-    tl.fromTo(
-      refs.entranceImage,
+      el,
       { filter: "blur(0px) brightness(1)" },
       { filter: "blur(6px) brightness(1.3)", duration: entrance.walkEnd * 0.4, ease: "power1.in" },
       entrance.walkEnd * 0.6,
-    );
-  }
-  if (refs.entranceBloom) {
+    ),
+  );
+  at(refs.entranceBloom, (el) =>
+    tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: entrance.walkEnd * 0.5, ease: "power1.in" }, entrance.walkEnd * 0.5),
+  );
+  at(refs.entrance, (el) =>
     tl.fromTo(
-      refs.entranceBloom,
-      { opacity: 0 },
-      { opacity: 1, duration: entrance.walkEnd * 0.5, ease: "power1.in" },
-      entrance.walkEnd * 0.5,
-    );
-  }
-  if (refs.entrance) {
-    tl.fromTo(
-      refs.entrance,
+      el,
       { autoAlpha: 1 },
       { autoAlpha: 0, duration: entrance.dissolveEnd - entrance.dissolveStart, ease: "power1.inOut" },
       entrance.dissolveStart,
-    );
-  }
+    ),
+  );
 
-  // The doors swing open as the camera reaches them.
-  tl.to(state, { doorOpen: 1, duration: cinematicConfig.door.duration, ease: "power1.inOut" }, cinematicConfig.door.start);
-
-  // Overlay headlines fade in and out at their configured phase boundaries.
-  copy.phases.forEach((phase, i) => {
-    const el = refs.headlines[i];
-    if (!el) return;
-    const fade = 0.05;
+  // 2. Interior: comes into focus as the entrance dissolves, then a slow push towards the bar.
+  at(refs.interiorImage, (el) => {
     tl.fromTo(
       el,
-      { autoAlpha: 0, y: 22 },
-      { autoAlpha: 1, y: 0, duration: fade, ease: "power2.out" },
-      phase.start,
+      { filter: "blur(10px) brightness(1.25)" },
+      { filter: "blur(0px) brightness(1)", duration: entrance.dissolveEnd - entrance.dissolveStart + 0.02, ease: "power1.out" },
+      entrance.dissolveStart,
     );
-    tl.to(el, { autoAlpha: 0, y: -16, duration: fade, ease: "power2.in" }, phase.end - fade);
+    // Depth of field during the close-up: the room softens, the screen stays sharp.
+    tl.to(el, { filter: "blur(4px) brightness(0.8)", duration: interior.zoom.end - interior.wake.start, ease: "power1.in" }, interior.wake.start);
   });
-
-  if (refs.hint) {
-    tl.to(refs.hint, { autoAlpha: 0, duration: 0.03 }, 0.02);
-  }
-
-  // Handoff: the morph value drives the overlay rectangle, and the scrim darkens the copy side.
-  const morphDuration = timing.handoffEnd - timing.handoffStart;
-  tl.to(state, { morph: 1, duration: morphDuration, ease: "power2.inOut" }, timing.handoffStart);
-  if (refs.scrim) {
+  at(refs.interiorDrift, (el) =>
     tl.fromTo(
-      refs.scrim,
+      el,
+      { scale: interior.drift.from },
+      { scale: interior.drift.to, duration: interior.drift.end - interior.drift.start, ease: "sine.inOut" },
+      interior.drift.start,
+    ),
+  );
+
+  // 3. Close-up on the POS terminal; the screen glows, then the interface wakes up on it.
+  at(refs.interiorZoom, (el) =>
+    tl.fromTo(
+      el,
+      { scale: 1 },
+      { scale: interior.zoom.scale, duration: interior.zoom.end - interior.zoom.start, ease: "power2.inOut" },
+      interior.zoom.start,
+    ),
+  );
+  at(refs.screenGlow, (el) => {
+    tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.06, ease: "power1.out" }, interior.zoom.start + 0.03);
+    tl.to(el, { opacity: 0, duration: 0.04 }, interior.wake.end);
+  });
+  at(refs.handoff, (el) =>
+    tl.fromTo(
+      el,
       { autoAlpha: 0 },
-      { autoAlpha: 1, duration: 0.1, ease: "power1.out" },
-      timing.handoffStart + 0.02,
-    );
-  }
+      { autoAlpha: 1, duration: interior.wake.end - interior.wake.start, ease: "power1.inOut" },
+      interior.wake.start,
+    ),
+  );
+
+  // 4. The interface leaves the screen and settles into the product presentation.
+  tl.to(state, { morph: 1, duration: handoff.end - handoff.start, ease: "power2.inOut" }, handoff.start);
+  at(refs.interior, (el) => tl.to(el, { opacity: 0.4, duration: 0.08 }, handoff.start + 0.02));
+  at(refs.scrim, (el) =>
+    tl.fromTo(el, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.08, ease: "power1.out" }, handoff.start + 0.03),
+  );
   const hero = refs.hero.filter((el): el is HTMLElement => el !== null);
   if (hero.length) {
     tl.fromTo(
       hero,
       { autoAlpha: 0, y: 26 },
-      { autoAlpha: 1, y: 0, duration: 0.06, stagger: 0.012, ease: "power2.out" },
+      { autoAlpha: 1, y: 0, duration: 0.05, stagger: 0.01, ease: "power2.out" },
       timing.heroRevealStart,
     );
   }
-  if (refs.canvas) {
-    // The restaurant stays faintly visible behind the product copy.
-    tl.to(refs.canvas, { opacity: 0.45, duration: 0.08 }, timing.handoffStart + 0.04);
-  }
+
+  // Story copy: each headline fades in, holds, and fades out within its phase.
+  copy.phases.forEach((phase, i) => {
+    const el = refs.headlines[i];
+    if (!el) return;
+    const fade = 0.025;
+    tl.fromTo(el, { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: fade, ease: "power2.out" }, phase.start);
+    tl.to(el, { autoAlpha: 0, y: -16, duration: fade, ease: "power2.in" }, phase.end - fade);
+  });
+
+  at(refs.hint, (el) => tl.to(el, { autoAlpha: 0, duration: 0.02 }, 0.015));
+  at(refs.railFill, (el) => tl.fromTo(el, { scaleY: 0 }, { scaleY: 1, duration: 1 }, 0));
 
   return tl;
 }

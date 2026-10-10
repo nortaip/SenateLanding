@@ -4,7 +4,7 @@ import { ArrowRight, PlayCircle } from "lucide-react";
 import { cinematicConfig } from "@/config/cinematicConfig";
 import type { TimelineRefs } from "@/lib/animation/cinematicTimeline";
 
-const { copy, pos } = cinematicConfig;
+const { copy, handoff, interior } = cinematicConfig;
 
 /**
  * Text layer for the stage. Elements are written into `refs` through callback refs, and the
@@ -12,20 +12,39 @@ const { copy, pos } = cinematicConfig;
  */
 export function CinematicOverlay({ refs }: { refs: TimelineRefs }) {
   return (
-    <div className="pointer-events-none absolute inset-0 z-[3]">
+    <div className="pointer-events-none absolute inset-0 z-[5]">
       {copy.phases.map((phase, i) => (
-        <p
+        <div
           key={phase.id}
           ref={(el) => {
             refs.headlines[i] = el;
           }}
           style={{ opacity: 0 }}
-          className="absolute inset-x-6 bottom-[16vh] max-w-[34rem] font-display text-2xl font-semibold leading-tight text-mist-100 drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] sm:text-3xl md:left-[6vw] md:right-auto md:text-4xl"
+          className="absolute inset-x-6 bottom-[13vh] max-w-[36rem] drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)] md:left-[7vw] md:right-auto"
         >
-          <span className="mb-4 block h-px w-14 bg-gold-400/80" aria-hidden />
-          {phase.text}
-        </p>
+          <span className="mb-5 block h-px w-12 bg-gold-400/90" aria-hidden />
+          <p className="font-display text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-mist-100 sm:text-4xl md:text-[2.75rem]">
+            {phase.text}
+          </p>
+          {phase.sub && <p className="mt-4 text-sm text-mist-300 sm:text-base">{phase.sub}</p>}
+        </div>
       ))}
+
+      {/* Scroll rail: fills as the opening progresses */}
+      <div className="absolute bottom-[9vh] right-8 hidden flex-col items-center gap-4 md:flex lg:right-12" aria-hidden>
+        <span className="rotate-180 text-[10px] font-medium uppercase tracking-[0.35em] text-mist-300/80 [writing-mode:vertical-rl]">
+          {copy.railLabel}
+        </span>
+        <span className="relative h-32 w-px bg-white/15">
+          <span
+            ref={(el) => {
+              refs.railFill = el;
+            }}
+            className="absolute inset-0 origin-top bg-gold-400"
+            style={{ transform: "scaleY(0)" }}
+          />
+        </span>
+      </div>
 
       <div
         ref={(el) => {
@@ -117,7 +136,15 @@ function CtaRow({ wrap }: { wrap: (el: HTMLDivElement | null) => void }) {
 export function StaticOpeningPanel() {
   return (
     <div className="relative flex h-[100svh] min-h-[560px] w-full items-center overflow-hidden bg-[#060b16]">
-      <div className="pointer-events-none absolute inset-0 bg-grid" aria-hidden />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={interior.imageUrl}
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-45"
+        style={{ objectPosition: `${interior.crop.x}% ${interior.crop.y}%` }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#060b16] via-[#060b16]/80 to-[#060b16]/30" aria-hidden />
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-5 sm:px-8 md:grid-cols-[1fr_1.4fr]">
         <div className="pt-24 md:pt-0">
           <div className="flex items-center gap-3">
@@ -146,7 +173,13 @@ export function StaticOpeningPanel() {
         </div>
         <div className="glass overflow-hidden rounded-2xl shadow-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pos.textureUrl} alt={copy.staticAlt} width={1600} height={1000} className="h-auto w-full" />
+          <img
+            src={handoff.imageUrl}
+            alt={copy.staticAlt}
+            width={handoff.width}
+            height={handoff.height}
+            className="aspect-[16/10] h-auto w-full bg-[#091220] object-contain"
+          />
         </div>
       </div>
     </div>

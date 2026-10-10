@@ -1,30 +1,13 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { cinematicConfig } from "@/config/cinematicConfig";
 import type { TimelineRefs } from "@/lib/animation/cinematicTimeline";
+import { coverFrameStyle } from "@/lib/animation/photoPlate";
 
 const { entrance } = cinematicConfig;
-const ASPECT = entrance.imageWidth / entrance.imageHeight;
-/** Slight oversize so the handheld drift never reveals an edge. */
-const OVERSCAN = 1.03;
 
-/**
- * The image keeps its own aspect ratio and covers the stage, centred. Overlays inside it are
- * placed in image percentages, so they stay pinned to the right spot at any viewport size.
- * Container query units make this independent of scrollbars and of the page width.
- */
-const frameStyle: CSSProperties = {
-  position: "absolute",
-  left: "50%",
-  top: "50%",
-  width: `calc(max(100cqw, 100cqh * ${ASPECT}) * ${OVERSCAN})`,
-  height: `calc(max(100cqw / ${ASPECT}, 100cqh) * ${OVERSCAN})`,
-  marginLeft: `calc(max(100cqw, 100cqh * ${ASPECT}) * ${OVERSCAN} / -2)`,
-  marginTop: `calc(max(100cqw / ${ASPECT}, 100cqh) * ${OVERSCAN} / -2)`,
-  transformOrigin: `${entrance.focus.x}% ${entrance.focus.y}%`,
-  willChange: "transform",
-};
+/** Overlays inside the frame are placed in image percentages, so they stay on their spot. */
+const frameStyle = coverFrameStyle(entrance.imageWidth / entrance.imageHeight, entrance.crop, entrance.focus);
 
 /**
  * Photographic entrance. The timeline scales the frame around the corridor's vanishing point

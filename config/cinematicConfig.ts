@@ -1,17 +1,26 @@
 /**
  * Tunable parameters for the cinematic opening.
- * Everything that controls timing, camera framing, lighting and quality lives here
- * so the experience can be adjusted without touching the scene code.
+ * Everything that controls timing, framing and copy lives here, so the experience can be
+ * adjusted without touching the components. Progress values are fractions of the pinned
+ * scroll (0 = top of the page, 1 = end of the opening).
  */
 
 export const cinematicConfig = {
   copy: {
     scrollHint: "Scroll to explore",
+    railLabel: "Scroll",
+    /** Each headline holds for roughly one viewport of scroll, so it can be read. */
     phases: [
-      { id: "arrival", start: 0.02, end: 0.11, text: "Hər möhtəşəm xidmət bir addımla başlayır." },
-      { id: "awakening", start: 0.2, end: 0.34, text: "Hər restoranın bir hekayəsi var." },
-      { id: "entering", start: 0.4, end: 0.54, text: "Hər sifariş bir hərəkətlə başlayır." },
-      { id: "approach", start: 0.6, end: 0.78, text: "Bütün proseslər bir sistemdə birləşir." },
+      { id: "arrival", start: 0.02, end: 0.12, text: "Hər möhtəşəm xidmət bir addımla başlayır.", sub: "" },
+      { id: "story", start: 0.22, end: 0.34, text: "Hər restoranın bir hekayəsi var.", sub: "" },
+      {
+        id: "order",
+        start: 0.38,
+        end: 0.5,
+        text: "Hər sifariş bir hərəkətlə başlayır.",
+        sub: "Qonaq rahatlığı. Texnologiyanın görünməyən gücü.",
+      },
+      { id: "system", start: 0.54, end: 0.66, text: "Bütün proseslər bir sistemdə birləşir.", sub: "" },
     ],
     brandLine: "Senate POS — restoranınızın rəqəmsal idarəetmə sistemi.",
     productHeadline: "Tam Restoran Əməliyyat Sistemi",
@@ -21,35 +30,18 @@ export const cinematicConfig = {
   },
 
   timing: {
-    /** Pinned distance, in viewport heights of scroll. */
-    scrollViewports: 3.4,
-    /** ScrollTrigger scrub smoothing in seconds (0 = exact, deterministic follow). */
-    scrubSmoothing: 0.8,
-    /** Timeline position at which the 3D screen is handed to the HTML layer. */
-    handoffStart: 0.8,
-    /** Timeline position at which the handoff reaches its final rectangle. */
-    handoffEnd: 0.94,
-    /** Timeline position at which the product copy starts to appear. */
-    heroRevealStart: 0.86,
-    /** Autoplay light reveal on first load, in seconds. */
-    introDuration: 2.4,
+    /** Pinned distance, in viewport heights of scroll. Longer = slower, more time to read. */
+    scrollViewports: 9,
+    /** ScrollTrigger scrub smoothing in seconds (0 = exact follow). */
+    scrubSmoothing: 1,
+    /** Product copy appears once the interface has reached its final rectangle. */
+    heroRevealStart: 0.89,
   },
-
-  lighting: {
-    /** Interior light level before the camera reaches the door (hidden behind the entrance plate). */
-    dimLevel: 0.12,
-    /** Lights are fully on by the time the entrance plate dissolves into the room. */
-    onStart: 0.04,
-    onEnd: 0.14,
-  },
-
-  /** 3D doorway opening, in timeline progress. Finished before the plate dissolves. */
-  door: { start: 0.02, duration: 0.1 },
 
   /**
-   * Photographic entrance plate. The camera "walks" into the open doorway by scaling the
-   * plate around the corridor's vanishing point, then dissolves into the 3D room behind it.
-   * Coordinates are percentages of the source image.
+   * Street entrance (photographic plate). Scroll walks the camera into the open doorway by
+   * scaling around the corridor's vanishing point, then the plate dissolves into the interior.
+   * Image coordinates are percentages.
    */
   entrance: {
     imageUrl: "/cinematic/entrance.webp",
@@ -58,83 +50,64 @@ export const cinematicConfig = {
     alt: "Senate POS restoranının axşam girişi: daş sütunlar, açıq şüşə qapılar və isti işıqlı zal",
     /** Vanishing point of the corridor seen through the doors. */
     focus: { x: 50, y: 47 },
-    /** Scale reached at the end of the walk-in. */
+    /** Crop centre on narrow (portrait) screens. */
+    crop: { x: 50, y: 50 },
     zoom: 2.4,
-    /** Walk-in from 0 to `walkEnd`; the plate dissolves between `dissolveStart` and `dissolveEnd`. */
-    walkEnd: 0.15,
-    dissolveStart: 0.13,
-    dissolveEnd: 0.17,
-    /** Wall sconces, for the breathing glow. */
+    walkEnd: 0.17,
+    dissolveStart: 0.15,
+    dissolveEnd: 0.2,
     sconces: [
       { x: 23.7, y: 19.9 },
       { x: 76.7, y: 19.9 },
     ],
-    /** "Better food / Better people / Better moments" panel on the right pillar: a button. */
+    /** "Better food / Better people / Better moments" panel on the right pillar: a link. */
     betterPanel: { left: 84.2, top: 10.8, width: 7.8, height: 26.2, href: "#ecosystem" },
   },
 
-  camera: {
-    fov: { desktop: 42, mobile: 56 },
-    eyeHeight: 1.5,
-    /** Minimum camera distance from the POS screen at the end of the path. */
-    minFinalDistance: 0.34,
-    /**
-     * Keyframed waypoints. `at` is the timeline progress at which the camera reaches the point,
-     * so pacing follows the story instead of path length.
-     */
-    waypoints: [
-      // Hidden behind the entrance plate, then at the threshold when the plate dissolves
-      { at: 0.0, position: [0.0, 1.5, 9.0], target: [0.0, 1.5, 4.0] },
-      { at: 0.15, position: [0.05, 1.5, 6.6], target: [0.1, 1.4, 2.0] },
-      // Through the room towards the bar
-      { at: 0.22, position: [0.4, 1.55, 4.6], target: [0.0, 1.1, 0.0] },
-      { at: 0.34, position: [0.0, 1.5, 2.4], target: [0.4, 1.1, -1.0] },
-      { at: 0.46, position: [0.5, 1.5, 0.0], target: [1.8, 1.2, -3.0] },
-      { at: 0.6, position: [1.6, 1.5, -2.6], target: [3.4, 1.2, -4.6] },
-      { at: 0.72, position: [2.2, 1.5, -4.2], target: [3.35, 1.3, -5.0] },
-    ],
-    /** Progress at which the camera reaches its final pose in front of the POS screen. */
-    finalAt: 0.86,
+  /**
+   * Dining room and bar (photographic plate). A slow push towards the bar while the story
+   * copy plays, then the camera closes in on the POS terminal and enters its screen.
+   */
+  interior: {
+    imageUrl: "/cinematic/interior.webp",
+    imageWidth: 1672,
+    imageHeight: 941,
+    alt: "Senate POS restoranının zalı: mərmər bar, barın üzərində Senate POS terminalı, məxmər oturacaqlar",
+    /** Crop centre on narrow (portrait) screens: keep the bar and the POS in view. */
+    crop: { x: 72, y: 50 },
+    /** Slow push while the story copy plays. */
+    drift: { start: 0.15, end: 0.66, from: 1.06, to: 1.16, origin: { x: 68, y: 50 } },
+    /** POS screen corners in the photo, in texture order: TL, TR, BR, BL (percent). */
+    screen: [
+      [73.27, 43.78],
+      [80.2, 43.57],
+      [77.63, 54.09],
+      [70.81, 53.24],
+    ] as [number, number][],
+    /** Close-up on the POS screen. */
+    zoom: { start: 0.64, end: 0.8, scale: 4.2 },
+    /** The Senate POS interface fades in on the screen ("the POS wakes up"). */
+    wake: { start: 0.72, end: 0.78 },
   },
 
-  pos: {
-    /** Base of the terminal, standing on the counter top. */
-    basePosition: [3.45, 1.05, -5.0] as [number, number, number],
-    /** Screen centre height above the counter top. */
-    screenCenterY: 0.45,
-    /** Screen plane size in metres. */
-    width: 0.42,
-    aspect: 2.8,
-    textureUrl: "/cinematic/senate-pos-screen.png",
+  /** The interface leaves the screen and settles into the product presentation. */
+  handoff: {
+    imageUrl: "/cinematic/senate-pos-screen.png",
+    /** CSS pixel size of the handoff element; matches a 16:10 POS display. */
+    width: 1600,
+    height: 1000,
+    start: 0.8,
+    end: 0.9,
   },
 
   /**
    * Final rectangle of the product presentation, as fractions of the stage.
-   * The screen is contain-fitted inside this box so its aspect ratio never distorts.
+   * The interface is contain-fitted inside this box so it never distorts.
    */
   handoffTarget: {
-    desktop: { left: 0.36, top: 0.08, width: 0.6, height: 0.84 },
-    mobile: { left: 0.04, top: 0.06, width: 0.92, height: 0.5 },
-  },
-
-  quality: {
-    desktop: { dpr: 1.75, tables: 5, pointLights: 4, chainStrands: 520, bottles: 90 },
-    mobile: { dpr: 1.25, tables: 3, pointLights: 2, chainStrands: 160, bottles: 36 },
-  },
-
-  palette: {
-    background: "#060b16",
-    fog: "#0a111f",
-    navy: "#1b2a4a",
-    navyVelvet: "#1d2940",
-    woodDark: "#2e1b12",
-    woodMid: "#4a2c1b",
-    marble: "#2a1d18",
-    brass: "#c9a25a",
-    warm: "#ffb36b",
-    senateBlue: "#3b82f6",
+    desktop: { left: 0.4, top: 0.12, width: 0.56, height: 0.76 },
+    mobile: { left: 0.05, top: 0.1, width: 0.9, height: 0.42 },
   },
 } as const;
 
 export type CinematicConfig = typeof cinematicConfig;
-export type QualityLevel = "desktop" | "mobile";
