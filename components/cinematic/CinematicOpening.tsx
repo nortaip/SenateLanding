@@ -69,7 +69,7 @@ export function CinematicOpening() {
     canvas: null,
     scrim: null,
     hint: null,
-    headlines: [null, null, null],
+    headlines: [null, null, null, null],
     hero: [null, null, null, null],
     handoff: null,
   }).current;

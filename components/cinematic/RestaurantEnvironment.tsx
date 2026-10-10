@@ -55,9 +55,6 @@ export function RestaurantEnvironment({ mats, state, quality }: EnvProps) {
       <mesh position={[0, height / 2, minZ]} material={mats.plaster}>
         <planeGeometry args={[width, height]} />
       </mesh>
-      <mesh position={[0, height / 2, maxZ]} rotation={[0, Math.PI, 0]} material={mats.plaster}>
-        <planeGeometry args={[width, height]} />
-      </mesh>
 
       <WoodSlats mats={mats} quality={quality} />
       <WallPainting mats={mats} />

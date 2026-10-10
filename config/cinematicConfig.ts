@@ -8,9 +8,10 @@ export const cinematicConfig = {
   copy: {
     scrollHint: "Scroll to explore",
     phases: [
-      { id: "awakening", start: 0.03, end: 0.18, text: "Hər restoranın bir hekayəsi var." },
-      { id: "entering", start: 0.24, end: 0.42, text: "Hər sifariş bir hərəkətlə başlayır." },
-      { id: "approach", start: 0.49, end: 0.72, text: "Bütün proseslər bir sistemdə birləşir." },
+      { id: "arrival", start: 0.03, end: 0.13, text: "Hər möhtəşəm xidmət bir addımla başlayır." },
+      { id: "awakening", start: 0.2, end: 0.34, text: "Hər restoranın bir hekayəsi var." },
+      { id: "entering", start: 0.4, end: 0.54, text: "Hər sifariş bir hərəkətlə başlayır." },
+      { id: "approach", start: 0.6, end: 0.76, text: "Bütün proseslər bir sistemdə birləşir." },
     ],
     brandLine: "Senate POS — restoranınızın rəqəmsal idarəetmə sistemi.",
     productHeadline: "Tam Restoran Əməliyyat Sistemi",
@@ -35,12 +36,15 @@ export const cinematicConfig = {
   },
 
   lighting: {
-    /** Lights dimmed at the entrance. */
-    dimLevel: 0.3,
-    /** Progress range over which warm lights turn fully on. */
-    onStart: 0.02,
-    onEnd: 0.22,
+    /** Interior lights stay low while the camera is still outside at dusk. */
+    dimLevel: 0.12,
+    /** Progress range over which the interior lights come up, as the camera enters. */
+    onStart: 0.14,
+    onEnd: 0.3,
   },
+
+  /** Doorway opening, in timeline progress. */
+  door: { start: 0.04, duration: 0.09 },
 
   camera: {
     fov: { desktop: 42, mobile: 56 },
@@ -49,6 +53,10 @@ export const cinematicConfig = {
     minFinalDistance: 0.34,
     /** Waypoints: position and look-at target, sampled along the path in order. */
     waypoints: [
+      // Exterior, at dusk: approach the doors along the paving
+      { position: [0.0, 1.5, 14.0], target: [0.0, 1.5, 6.0] },
+      { position: [0.1, 1.5, 9.5], target: [0.0, 1.45, 6.0] },
+      // Through the doorway and into the room
       { position: [0.6, 1.55, 5.2], target: [0.0, 1.1, 0.0] },
       { position: [0.0, 1.5, 2.6], target: [0.4, 1.1, -1.0] },
       { position: [0.5, 1.5, 0.0], target: [1.8, 1.2, -3.0] },

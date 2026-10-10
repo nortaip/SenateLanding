@@ -11,6 +11,8 @@ export interface CinematicState {
   progress: number;
   /** Autoplay intro multiplier, 0..1. Runs once on load, then stays at 1. */
   intro: number;
+  /** Front door opening, 0 (closed) .. 1 (open). Scrubbed by the timeline. */
+  doorOpen: number;
   /** Screen-to-interface handoff, 0..1. */
   morph: number;
   /** True once the handoff overlay has taken over from the 3D screen. */
@@ -26,6 +28,7 @@ export function createCinematicState(quality: QualityLevel): CinematicState {
   return {
     progress: 0,
     intro: 0,
+    doorOpen: 0,
     morph: 0,
     handoffActive: false,
     quality,
@@ -69,6 +72,9 @@ export function buildCinematicTimeline(
 
   // Camera and lights follow the raw progress value.
   tl.to(state, { progress: 1, duration: 1 }, 0);
+
+  // The doors swing open as the camera reaches them.
+  tl.to(state, { doorOpen: 1, duration: cinematicConfig.door.duration, ease: "power1.inOut" }, cinematicConfig.door.start);
 
   // Overlay headlines fade in and out at their configured phase boundaries.
   copy.phases.forEach((phase, i) => {

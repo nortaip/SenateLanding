@@ -10,6 +10,7 @@ import type { CinematicState } from "@/lib/animation/cinematicTimeline";
 import { CinematicCamera } from "./CinematicCamera";
 import { POSTerminal } from "./POSTerminal";
 import { RestaurantEnvironment, RestaurantLights, ROOM } from "./RestaurantEnvironment";
+import { RestaurantExterior } from "./RestaurantExterior";
 import { RestaurantFurniture } from "./RestaurantFurniture";
 import { useRestaurantMaterials } from "./restaurantMaterials";
 import { ScreenProjector } from "./ScreenTransition";
@@ -79,6 +80,7 @@ function SceneContents({ state, quality }: { state: CinematicState; quality: Qua
     <>
       <RestaurantLights mats={mats} state={state} quality={quality} />
       <RestaurantEnvironment mats={mats} state={state} quality={quality} />
+      <RestaurantExterior mats={mats} state={state} />
       <RestaurantFurniture mats={mats} state={state} quality={quality} />
       <POSTerminal mats={mats} state={state} />
       <ContactShadows
