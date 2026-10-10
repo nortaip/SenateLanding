@@ -22,6 +22,8 @@ interface ExteriorProps {
  */
 export function RestaurantExterior({ mats, state }: ExteriorProps) {
   const { minX, maxX, height } = ROOM;
+  const stone = useMemo(() => new THREE.MeshStandardMaterial({ color: "#6b6259", roughness: 0.8 }), []);
+  useEffect(() => () => stone.dispose(), [stone]);
   const z = DOOR.z;
   const sideWidth = maxX - DOOR.halfWidth; // same width on both sides of the doorway
   const leftX = minX + sideWidth / 2;
@@ -30,10 +32,10 @@ export function RestaurantExterior({ mats, state }: ExteriorProps) {
   return (
     <group>
       {/* Facade walls beside the doorway, facing the street */}
-      <FacadeWall x={leftX} width={sideWidth} height={height} z={z} mats={mats} />
-      <FacadeWall x={rightX} width={sideWidth} height={height} z={z} mats={mats} />
+      <FacadeWall x={leftX} width={sideWidth} height={height} z={z} material={stone} />
+      <FacadeWall x={rightX} width={sideWidth} height={height} z={z} material={stone} />
       {/* Lintel above the door */}
-      <mesh position={[0, (DOOR.height + height) / 2, z]} material={mats.plaster}>
+      <mesh position={[0, (DOOR.height + height) / 2, z]} material={stone}>
         <boxGeometry args={[DOOR.halfWidth * 2, height - DOOR.height, 0.24]} />
       </mesh>
 
@@ -50,16 +52,16 @@ function FacadeWall({
   width,
   height,
   z,
-  mats,
+  material,
 }: {
   x: number;
   width: number;
   height: number;
   z: number;
-  mats: RestaurantMaterials;
+  material: THREE.Material;
 }) {
   return (
-    <mesh position={[x, height / 2, z]} material={mats.plaster}>
+    <mesh position={[x, height / 2, z]} material={material}>
       <planeGeometry args={[width, height]} />
     </mesh>
   );
@@ -83,16 +85,10 @@ function Doors({ mats, state }: { mats: RestaurantMaterials; state: CinematicSta
         <mesh position={[leaf / 2, 0, 0]} material={mats.glass}>
           <boxGeometry args={[leaf, DOOR.height - 0.04, 0.03]} />
         </mesh>
-        <mesh position={[leaf / 2, 0, 0]} material={mats.terminalBody}>
-          <boxGeometry args={[leaf, DOOR.height - 0.04, 0.02]} />
-        </mesh>
       </group>
       <group ref={right} position={[DOOR.halfWidth, DOOR.height / 2 - 0.02, DOOR.z]}>
         <mesh position={[-leaf / 2, 0, 0]} material={mats.glass}>
           <boxGeometry args={[leaf, DOOR.height - 0.04, 0.03]} />
-        </mesh>
-        <mesh position={[-leaf / 2, 0, 0]} material={mats.terminalBody}>
-          <boxGeometry args={[leaf, DOOR.height - 0.04, 0.02]} />
         </mesh>
       </group>
       {/* Door frame */}
@@ -121,6 +117,7 @@ function Lanterns({ mats }: { mats: RestaurantMaterials }) {
           <mesh position={[0, 0, 0.06]} material={mats.bulb}>
             <boxGeometry args={[0.08, 0.2, 0.02]} />
           </mesh>
+          <pointLight position={[0, 0, 0.6]} color="#ffb36b" intensity={4} distance={6} decay={2} />
         </group>
       ))}
     </group>
