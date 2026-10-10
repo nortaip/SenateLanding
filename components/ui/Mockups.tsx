@@ -99,7 +99,7 @@ export function BrowserFrame({
 
 export function DashboardMockup({ accent = "#d4af37" }: { accent?: string }) {
   return (
-    <div className="flex bg-ink-900/80 text-left">
+    <div data-pos-screen className="flex bg-ink-900/80 text-left">
       {/* sidebar */}
       <div className="hidden w-40 shrink-0 flex-col gap-3 border-r border-white/5 bg-black/20 p-4 sm:flex">
         <div className="flex items-center gap-2">

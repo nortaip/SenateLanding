@@ -12,10 +12,14 @@ import { useI18n } from "./i18n/LanguageProvider";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-export function Hero() {
+export function Hero({ variant = "full" }: { variant?: "full" | "showcase" }) {
   const { t } = useI18n();
+  const showCopy = variant === "full";
   return (
-    <section id="top" className="relative overflow-hidden pt-32 sm:pt-40">
+    <section
+      id={showCopy ? "top" : "showcase"}
+      className={`relative overflow-hidden ${showCopy ? "pt-32 sm:pt-40" : "pt-16 sm:pt-24"}`}
+    >
       {/* Backdrop */}
       <div className="pointer-events-none absolute inset-0 bg-grid" aria-hidden />
       <div
@@ -36,71 +40,75 @@ export function Hero() {
       />
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
-        {/* Copy */}
-        <div className="mx-auto max-w-4xl text-center">
-          <motion.a
-            href="#ecosystem"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease }}
-            className="glass-gold group inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium text-gold-300"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {t.hero.badge}
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </motion.a>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.06, ease }}
-            className="mt-6 font-display text-4xl font-bold leading-[1.05] tracking-tight text-mist-100 sm:text-6xl md:text-7xl"
-          >
-            {t.hero.headlineTop}
-            <br />
-            <span className="text-gradient-gold">{t.hero.headlineAccent}</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.14, ease }}
-            className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-mist-300 sm:text-lg"
-          >
-            {t.hero.subtitle}
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.22, ease }}
-            className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-          >
-            <a
-              href="#"
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-gold-300 to-gold-600 px-7 py-3.5 text-sm font-semibold text-ink-900 shadow-xl transition-transform hover:scale-[1.03] sm:w-auto"
-            >
-              <PlayCircle className="h-5 w-5" />
-              {t.hero.watchVideo}
-            </a>
-            <a
+        {showCopy && (
+          <>
+          {/* Copy */}
+          <div className="mx-auto max-w-4xl text-center">
+            <motion.a
               href="#ecosystem"
-              className="glass group inline-flex w-full items-center justify-center gap-2 rounded-2xl px-7 py-3.5 text-sm font-semibold text-mist-100 transition-colors hover:bg-white/5 sm:w-auto"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease }}
+              className="glass-gold group inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium text-gold-300"
             >
-              {t.hero.explore}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
-          </motion.div>
+              <Sparkles className="h-3.5 w-3.5" />
+              {t.hero.badge}
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </motion.a>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-5 text-xs text-mist-500"
-          >
-            {t.hero.note}
-          </motion.p>
-        </div>
+            <motion.h1
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.75, delay: 0.06, ease }}
+              className="mt-6 font-display text-4xl font-bold leading-[1.05] tracking-tight text-mist-100 sm:text-6xl md:text-7xl"
+            >
+              {t.hero.headlineTop}
+              <br />
+              <span className="text-gradient-gold">{t.hero.headlineAccent}</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.75, delay: 0.14, ease }}
+              className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-mist-300 sm:text-lg"
+            >
+              {t.hero.subtitle}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.75, delay: 0.22, ease }}
+              className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
+            >
+              <a
+                href="#"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-gold-300 to-gold-600 px-7 py-3.5 text-sm font-semibold text-ink-900 shadow-xl transition-transform hover:scale-[1.03] sm:w-auto"
+              >
+                <PlayCircle className="h-5 w-5" />
+                {t.hero.watchVideo}
+              </a>
+              <a
+                href="#ecosystem"
+                className="glass group inline-flex w-full items-center justify-center gap-2 rounded-2xl px-7 py-3.5 text-sm font-semibold text-mist-100 transition-colors hover:bg-white/5 sm:w-auto"
+              >
+                {t.hero.explore}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </a>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="mt-5 text-xs text-mist-500"
+            >
+              {t.hero.note}
+            </motion.p>
+          </div>
+          </>
+        )}
 
         {/* Device showcase */}
         <div className="relative mx-auto mt-16 max-w-6xl">

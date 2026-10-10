@@ -335,3 +335,13 @@ body {
     animation: none !important;
   }
 }
+
+/* Cinematic opening: scroll hint line */
+@keyframes scrollline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(260%);
+  }
+}

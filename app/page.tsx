@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
+import { CinematicOpening } from "@/components/cinematic/CinematicOpening";
 import { TrustedBy } from "@/components/TrustedBy";
 import { Ecosystem } from "@/components/Ecosystem";
 import { Screenshots } from "@/components/Screenshots";
@@ -17,7 +18,8 @@ export default function Home() {
     <>
       <Navbar />
       <main>
-        <Hero />
+        <CinematicOpening />
+        <Hero variant="showcase" />
         <TrustedBy />
         <Ecosystem />
         <Screenshots />
