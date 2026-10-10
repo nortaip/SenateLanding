@@ -76,11 +76,14 @@ export function CinematicOpening() {
 
   // Decide the mode once on the client. Mobile gets the simplified quality profile.
   useEffect(() => {
-    // Local development only: ?cinematic=1 shows the 3D opening even when the OS asks for
-    // reduced motion. Production always respects the setting.
-    const devOverride =
-      process.env.NODE_ENV !== "production" && new URLSearchParams(window.location.search).has("cinematic");
-    const reduced = !devOverride && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Local development only: the 3D opening ignores the OS reduced-motion setting, so it can be
+    // reviewed on machines where animations are off. ?reduced=1 previews the static fallback.
+    // Production always respects prefers-reduced-motion.
+    const params = new URLSearchParams(window.location.search);
+    const reduced =
+      process.env.NODE_ENV !== "production"
+        ? params.has("reduced")
+        : window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const webgl = supportsWebGL();
     if (reduced || !webgl) {
       console.info(`[cinematic] static opening: reducedMotion=${reduced}, webgl=${webgl}`);
