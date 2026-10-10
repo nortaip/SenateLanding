@@ -77,7 +77,7 @@ function HeroCopy({ refs }: { refs: TimelineRefs }) {
           style={{ opacity: 0 }}
           className="flex items-center gap-3"
         >
-          <img src="/favicon.svg" alt="" width={36} height={36} className="h-9 w-9" aria-hidden />
+          <img src="/brand/senate-icon.png" alt="" width={36} height={36} className="h-9 w-9" aria-hidden />
           <span className="font-display text-sm font-semibold tracking-[0.22em] text-mist-100">SENATE POS</span>
         </div>
         <h1
@@ -148,7 +148,7 @@ export function StaticOpeningPanel() {
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-5 sm:px-8 md:grid-cols-[1fr_1.4fr]">
         <div className="pt-24 md:pt-0">
           <div className="flex items-center gap-3">
-            <img src="/favicon.svg" alt="" width={36} height={36} className="h-9 w-9" aria-hidden />
+            <img src="/brand/senate-icon.png" alt="" width={36} height={36} className="h-9 w-9" aria-hidden />
             <span className="font-display text-sm font-semibold tracking-[0.22em] text-mist-100">SENATE POS</span>
           </div>
           <h1 className="mt-6 font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl">
