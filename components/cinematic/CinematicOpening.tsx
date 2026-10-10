@@ -77,7 +77,9 @@ export function CinematicOpening() {
   // Decide the mode once on the client. Mobile gets the simplified quality profile.
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || !supportsWebGL()) {
+    const webgl = supportsWebGL();
+    if (reduced || !webgl) {
+      console.info(`[cinematic] static opening: reducedMotion=${reduced}, webgl=${webgl}`);
       setMode("static");
       return;
     }
@@ -88,7 +90,10 @@ export function CinematicOpening() {
       state.quality = window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop";
       setMode("cinematic");
     };
-    image.onerror = () => setMode("static");
+    image.onerror = () => {
+      console.error(`[cinematic] could not load ${cinematicConfig.pos.textureUrl}, showing static opening`);
+      setMode("static");
+    };
     image.src = cinematicConfig.pos.textureUrl;
     return () => {
       image.onload = null;
