@@ -50,6 +50,11 @@ export function lightLevelFor(progress: number, intro: number): number {
 }
 
 export interface TimelineRefs {
+  /** Photographic entrance plate (whole layer), its zoom wrapper, image and light bloom. */
+  entrance: HTMLElement | null;
+  entranceZoom: HTMLElement | null;
+  entranceImage: HTMLElement | null;
+  entranceBloom: HTMLElement | null;
   canvas: HTMLElement | null;
   scrim: HTMLElement | null;
   hint: HTMLElement | null;
@@ -72,6 +77,42 @@ export function buildCinematicTimeline(
 
   // Camera and lights follow the raw progress value.
   tl.to(state, { progress: 1, duration: 1 }, 0);
+
+  // Entrance: walk into the open doorway, light floods in, then the plate dissolves into the
+  // 3D room, where the camera stands on the threshold at that moment.
+  const { entrance } = cinematicConfig;
+  if (refs.entranceZoom) {
+    tl.fromTo(
+      refs.entranceZoom,
+      { scale: 1 },
+      { scale: entrance.zoom, duration: entrance.walkEnd, ease: "power2.in" },
+      0,
+    );
+  }
+  if (refs.entranceImage) {
+    tl.fromTo(
+      refs.entranceImage,
+      { filter: "blur(0px) brightness(1)" },
+      { filter: "blur(6px) brightness(1.3)", duration: entrance.walkEnd * 0.4, ease: "power1.in" },
+      entrance.walkEnd * 0.6,
+    );
+  }
+  if (refs.entranceBloom) {
+    tl.fromTo(
+      refs.entranceBloom,
+      { opacity: 0 },
+      { opacity: 1, duration: entrance.walkEnd * 0.5, ease: "power1.in" },
+      entrance.walkEnd * 0.5,
+    );
+  }
+  if (refs.entrance) {
+    tl.fromTo(
+      refs.entrance,
+      { autoAlpha: 1 },
+      { autoAlpha: 0, duration: entrance.dissolveEnd - entrance.dissolveStart, ease: "power1.inOut" },
+      entrance.dissolveStart,
+    );
+  }
 
   // The doors swing open as the camera reaches them.
   tl.to(state, { doorOpen: 1, duration: cinematicConfig.door.duration, ease: "power1.inOut" }, cinematicConfig.door.start);

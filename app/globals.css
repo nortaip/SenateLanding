@@ -345,3 +345,30 @@ body {
     transform: translateY(260%);
   }
 }
+
+/* Cinematic opening: entrance plate */
+@keyframes handheld {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(-3px, 1.5px, 0) rotate(-0.05deg);
+  }
+  50% {
+    transform: translate3d(1.5px, -2.5px, 0) rotate(0.04deg);
+  }
+  75% {
+    transform: translate3d(2.5px, 1.5px, 0) rotate(0.02deg);
+  }
+}
+
+@keyframes sconce {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}

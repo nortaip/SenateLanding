@@ -8,7 +8,7 @@ export const cinematicConfig = {
   copy: {
     scrollHint: "Scroll to explore",
     phases: [
-      { id: "arrival", start: 0.03, end: 0.13, text: "Hər möhtəşəm xidmət bir addımla başlayır." },
+      { id: "arrival", start: 0.02, end: 0.11, text: "Hər möhtəşəm xidmət bir addımla başlayır." },
       { id: "awakening", start: 0.2, end: 0.34, text: "Hər restoranın bir hekayəsi var." },
       { id: "entering", start: 0.4, end: 0.54, text: "Hər sifariş bir hərəkətlə başlayır." },
       { id: "approach", start: 0.6, end: 0.78, text: "Bütün proseslər bir sistemdə birləşir." },
@@ -36,33 +36,65 @@ export const cinematicConfig = {
   },
 
   lighting: {
-    /** Interior lights stay low while the camera is still outside at dusk. */
+    /** Interior light level before the camera reaches the door (hidden behind the entrance plate). */
     dimLevel: 0.12,
-    /** Progress range over which the interior lights come up, as the camera enters. */
-    onStart: 0.14,
-    onEnd: 0.3,
+    /** Lights are fully on by the time the entrance plate dissolves into the room. */
+    onStart: 0.04,
+    onEnd: 0.14,
   },
 
-  /** Doorway opening, in timeline progress. */
-  door: { start: 0.04, duration: 0.09 },
+  /** 3D doorway opening, in timeline progress. Finished before the plate dissolves. */
+  door: { start: 0.02, duration: 0.1 },
+
+  /**
+   * Photographic entrance plate. The camera "walks" into the open doorway by scaling the
+   * plate around the corridor's vanishing point, then dissolves into the 3D room behind it.
+   * Coordinates are percentages of the source image.
+   */
+  entrance: {
+    imageUrl: "/cinematic/entrance.webp",
+    imageWidth: 1672,
+    imageHeight: 941,
+    alt: "Senate POS restoranının axşam girişi: daş sütunlar, açıq şüşə qapılar və isti işıqlı zal",
+    /** Vanishing point of the corridor seen through the doors. */
+    focus: { x: 50, y: 47 },
+    /** Scale reached at the end of the walk-in. */
+    zoom: 2.4,
+    /** Walk-in from 0 to `walkEnd`; the plate dissolves between `dissolveStart` and `dissolveEnd`. */
+    walkEnd: 0.15,
+    dissolveStart: 0.13,
+    dissolveEnd: 0.17,
+    /** Wall sconces, for the breathing glow. */
+    sconces: [
+      { x: 23.7, y: 19.9 },
+      { x: 76.7, y: 19.9 },
+    ],
+    /** "Better food / Better people / Better moments" panel on the right pillar: a button. */
+    betterPanel: { left: 84.2, top: 10.8, width: 7.8, height: 26.2, href: "#ecosystem" },
+  },
 
   camera: {
     fov: { desktop: 42, mobile: 56 },
     eyeHeight: 1.5,
     /** Minimum camera distance from the POS screen at the end of the path. */
     minFinalDistance: 0.34,
-    /** Waypoints: position and look-at target, sampled along the path in order. */
+    /**
+     * Keyframed waypoints. `at` is the timeline progress at which the camera reaches the point,
+     * so pacing follows the story instead of path length.
+     */
     waypoints: [
-      // Exterior, at dusk: approach the doors along the paving
-      { position: [0.0, 1.5, 14.0], target: [0.0, 1.5, 6.0] },
-      { position: [0.1, 1.5, 9.5], target: [0.0, 1.45, 6.0] },
-      // Through the doorway and into the room
-      { position: [0.6, 1.55, 5.2], target: [0.0, 1.1, 0.0] },
-      { position: [0.0, 1.5, 2.6], target: [0.4, 1.1, -1.0] },
-      { position: [0.5, 1.5, 0.0], target: [1.8, 1.2, -3.0] },
-      { position: [1.6, 1.5, -2.6], target: [3.4, 1.2, -4.6] },
-      { position: [2.2, 1.5, -4.2], target: [3.35, 1.3, -5.0] },
+      // Hidden behind the entrance plate, then at the threshold when the plate dissolves
+      { at: 0.0, position: [0.0, 1.5, 9.0], target: [0.0, 1.5, 4.0] },
+      { at: 0.15, position: [0.05, 1.5, 6.6], target: [0.1, 1.4, 2.0] },
+      // Through the room towards the bar
+      { at: 0.22, position: [0.4, 1.55, 4.6], target: [0.0, 1.1, 0.0] },
+      { at: 0.34, position: [0.0, 1.5, 2.4], target: [0.4, 1.1, -1.0] },
+      { at: 0.46, position: [0.5, 1.5, 0.0], target: [1.8, 1.2, -3.0] },
+      { at: 0.6, position: [1.6, 1.5, -2.6], target: [3.4, 1.2, -4.6] },
+      { at: 0.72, position: [2.2, 1.5, -4.2], target: [3.35, 1.3, -5.0] },
     ],
+    /** Progress at which the camera reaches its final pose in front of the POS screen. */
+    finalAt: 0.86,
   },
 
   pos: {

@@ -12,6 +12,7 @@ import {
   type TimelineRefs,
 } from "@/lib/animation/cinematicTimeline";
 import { CinematicOverlay, StaticOpeningPanel } from "./CinematicOverlay";
+import { EntrancePlate } from "./EntrancePlate";
 import { HANDOFF_HEIGHT, HANDOFF_WIDTH } from "./ScreenTransition";
 
 /** The WebGL bundle (three.js, R3F, drei) is loaded only once the stage is about to mount. */
@@ -66,6 +67,10 @@ export function CinematicOpening() {
   const stageRef = useRef<HTMLDivElement>(null);
   const handoffRef = useRef<HTMLDivElement>(null);
   const refs = useRef<TimelineRefs>({
+    entrance: null,
+    entranceZoom: null,
+    entranceImage: null,
+    entranceBloom: null,
     canvas: null,
     scrim: null,
     hint: null,
@@ -146,10 +151,21 @@ export function CinematicOpening() {
     };
   }, [mode, state, refs]);
 
-  if (mode !== "cinematic") {
+  if (mode === "static") {
     return (
       <section ref={wrapRef} id="top" aria-label={cinematicConfig.copy.productHeadline}>
         <StaticOpeningPanel />
+      </section>
+    );
+  }
+
+  // Before the 3D stage mounts, show the entrance's first frame so there is no visual swap.
+  if (mode === "pending") {
+    return (
+      <section ref={wrapRef} id="top" aria-label={cinematicConfig.copy.productHeadline}>
+        <div className="relative h-[100svh] w-full overflow-hidden bg-[#0b0806]">
+          <EntrancePlate />
+        </div>
       </section>
     );
   }
@@ -179,6 +195,8 @@ export function CinematicOpening() {
           style={{ opacity: 0 }}
           className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-[#060b16]/40 via-[#060b16]/70 to-[#060b16]/95 md:bg-gradient-to-r md:from-[#060b16]/92 md:via-[#060b16]/60 md:to-transparent"
         />
+
+        <EntrancePlate refs={refs} />
 
         {/* Senate POS interface: aligned to the 3D screen, then morphed into the product rectangle. */}
         <div
