@@ -1,6 +1,7 @@
 "use client";
 
-import { Crown, Twitter, Linkedin, Instagram, Facebook, Youtube } from "lucide-react";
+import { Twitter, Linkedin, Instagram, Facebook, Youtube } from "lucide-react";
+import { BrandMark } from "./ui/BrandMark";
 import { useI18n } from "./i18n/LanguageProvider";
 
 const socials = [
@@ -20,9 +21,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <a href="#top" className="flex items-center gap-2.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-gold-300 to-gold-600 shadow-lg">
-                <Crown className="h-5 w-5 text-ink-900" strokeWidth={2.4} />
-              </span>
+              <BrandMark />
               <span className="font-display text-lg font-bold tracking-tight text-mist-100">
                 Senate<span className="text-gradient-gold"> POS</span>
               </span>

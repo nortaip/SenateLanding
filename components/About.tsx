@@ -1,6 +1,7 @@
 "use client";
 
-import { Heart, Layers, LifeBuoy, TrendingUp, Crown, type LucideIcon } from "lucide-react";
+import { Heart, Layers, LifeBuoy, TrendingUp, type LucideIcon } from "lucide-react";
+import { BrandMark } from "./ui/BrandMark";
 import { SectionHeading } from "./ui/SectionHeading";
 import { Reveal } from "./ui/Reveal";
 import { trustStatValues } from "@/lib/data";
@@ -72,9 +73,7 @@ export function About() {
         {/* Brand band */}
         <Reveal className="mt-14">
           <div className="glass-gold flex flex-col items-center gap-3 rounded-2xl px-6 py-6 text-center sm:flex-row sm:justify-center sm:gap-4 sm:text-left">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-gold-300 to-gold-600 shadow-lg">
-              <Crown className="h-5 w-5 text-ink-900" strokeWidth={2.4} />
-            </span>
+            <BrandMark className="h-10 w-10" />
             <p className="text-sm text-mist-200">
               <span className="font-display font-semibold text-mist-100">Senate POS</span>{" "}
               — <span className="text-gold-300">Senate Group</span>

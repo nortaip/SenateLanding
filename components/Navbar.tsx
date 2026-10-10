@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Crown } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { BrandMark } from "./ui/BrandMark";
 import { useI18n } from "./i18n/LanguageProvider";
 import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
 
@@ -43,9 +44,7 @@ export function Navbar() {
           }`}
         >
           <a href="#top" className="flex items-center gap-2.5" aria-label="Senate POS home">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-gold-300 to-gold-600 shadow-lg">
-              <Crown className="h-5 w-5 text-ink-900" strokeWidth={2.4} />
-            </span>
+            <BrandMark />
             <span className="font-display text-lg font-bold tracking-tight text-mist-100">
               Senate<span className="text-gradient-gold"> POS</span>
             </span>

@@ -1,10 +1,14 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
 export const alt = "Senate POS — The Complete Restaurant Operating System";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OpengraphImage() {
+export default async function OpengraphImage() {
+  const icon = await readFile(join(process.cwd(), "public/brand/senate-icon.png"));
+  const iconSrc = `data:image/png;base64,${icon.toString("base64")}`;
   return new ImageResponse(
     (
       <div
@@ -21,20 +25,8 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 16,
-              background: "linear-gradient(135deg, #f0d98a, #b8932a)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 36,
-            }}
-          >
-            👑
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={iconSrc} width={64} height={64} alt="" />
           <div
             style={{
               display: "flex",
