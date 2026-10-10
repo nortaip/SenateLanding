@@ -11,7 +11,7 @@ export const cinematicConfig = {
       { id: "arrival", start: 0.03, end: 0.13, text: "Hər möhtəşəm xidmət bir addımla başlayır." },
       { id: "awakening", start: 0.2, end: 0.34, text: "Hər restoranın bir hekayəsi var." },
       { id: "entering", start: 0.4, end: 0.54, text: "Hər sifariş bir hərəkətlə başlayır." },
-      { id: "approach", start: 0.6, end: 0.76, text: "Bütün proseslər bir sistemdə birləşir." },
+      { id: "approach", start: 0.6, end: 0.78, text: "Bütün proseslər bir sistemdə birləşir." },
     ],
     brandLine: "Senate POS — restoranınızın rəqəmsal idarəetmə sistemi.",
     productHeadline: "Tam Restoran Əməliyyat Sistemi",
@@ -26,11 +26,11 @@ export const cinematicConfig = {
     /** ScrollTrigger scrub smoothing in seconds (0 = exact, deterministic follow). */
     scrubSmoothing: 0.8,
     /** Timeline position at which the 3D screen is handed to the HTML layer. */
-    handoffStart: 0.86,
+    handoffStart: 0.8,
     /** Timeline position at which the handoff reaches its final rectangle. */
-    handoffEnd: 0.97,
+    handoffEnd: 0.94,
     /** Timeline position at which the product copy starts to appear. */
-    heroRevealStart: 0.9,
+    heroRevealStart: 0.86,
     /** Autoplay light reveal on first load, in seconds. */
     introDuration: 2.4,
   },
